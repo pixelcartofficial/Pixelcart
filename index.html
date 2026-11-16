@@ -113,7 +113,7 @@ renderAll();
 
 <script>
 // PIXELCART V9 — Shared customer/owner account with server-verified roles.
-const PC_OWNER_EMAIL='hassan.ahmadalamir@gmail.com';
+const PC_OWNER_EMAILS=['hassan.ahmadalamir@gmail.com','mohammadalnasser093@gmail.com'];
 const PC_CFG_KEY='pixelcart_supabase_config_v1';
 const PC_SETTINGS_KEY='pixelcart_store_settings_v1';
 
@@ -297,7 +297,7 @@ async function pcRouteSession(session){
   return;
  }
 
- if(role==='owner'&&user.email?.toLowerCase()===PC_OWNER_EMAIL){
+ if(role==='owner'&&PC_OWNER_EMAILS.includes((user.email||'').toLowerCase())){
   pcOwnerSession=session;
   pcCustomerSession=null;
   toast('Owner signed in.');
