@@ -659,6 +659,8 @@ async function pcImportLocalData(){
   showModal('Cloud import complete','<p>Your store data has been copied to Supabase. The original local copy remains on this device as a backup.</p><button style="width:100%" onclick="adminHome(\'cloud\')">Back to cloud sync</button>');
  }catch(e){toast('Import stopped: '+(e.message||'Check SQL setup and permissions.'))}
 }
+const pcSaveSettingsOriginal=window.pcSaveSettings;
+window.pcSaveSettings=function(){pcSaveSettingsOriginal();if(pcOwnerSession&&pcCloudReady){pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings}).then(({error})=>{if(error)toast('Cloud settings save failed: '+error.message)})}};
 const pcSaveLocal=window.save;
 window.save=function(){pcSaveLocal();if(pcOwnerSession&&pcCloudReady){clearTimeout(pcCloudSaveTimer);pcCloudSaveTimer=setTimeout(async()=>{
  try{
@@ -666,7 +668,8 @@ window.save=function(){pcSaveLocal();if(pcOwnerSession&&pcCloudReady){clearTimeo
   await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
   await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
-  await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
+  for(const order of db.orders){const updated=await pcInitSupabase().from('pixelcart_orders').update({data:order}).eq('id',String(order.id));if(updated.error)throw updated.error;}
+  const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});if(settings.error)throw settings.error;
  }catch(e){toast('Cloud save failed: '+e.message)}
  },600)}};
 const pcRouteBeforeCloud=window.pcRouteSession;
