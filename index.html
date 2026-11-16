@@ -383,7 +383,7 @@ function pcSaveConfig(){
 function adminHome(tab='products'){
  if(!pcRequireOwner())return;
 
- const tabs=['products','categories','orders','reviews','delivery','discounts','store','connection','cloud'];
+ const tabs=['products','categories','orders','reviews','delivery','discounts','store','cloud'];
 
  showModal('PixelCart owner dashboard',
  `<div class="pc-owner-status">Verified owner account</div>
@@ -394,7 +394,7 @@ function adminHome(tab='products'){
    <button class="secondary" onclick="pcToggleEditMode()">${pcEditMode?'Turn off':'Turn on'} website Edit Mode</button>
    <button class="ghost" onclick="pcLogout()">Sign out</button>
   </div>
-  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='connection'?pcConnectionForm():tab==='cloud'?pcCloudPanel():adminContent(tab)}</div>`);
+  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='cloud'?pcCloudPanel():adminContent(tab)}</div>`);
 }
 
 function pcStoreSettingsForm(){
@@ -417,7 +417,7 @@ function pcStoreSettingsForm(){
  </select></div>
  <div class="wide"><button style="width:100%" onclick="pcSaveStoreForm()">Save store changes</button></div>
  </div>
- <div class="notice">Your current product catalogue, orders, reviews, categories, delivery estimates and discounts are still stored in this browser. Connecting Supabase login does not automatically move that data to the cloud.</div>`;
+ <div class="notice">Store appearance is saved to Supabase when cloud sync is connected. Use the Cloud tab to import your existing catalogue and store data before switching devices.</div>`;
 }
 
 function pcSaveStoreForm(){
@@ -525,7 +525,7 @@ window.pcCustomerHome=async function(){
   return '<div class="admin-item"><div><b>'+esc(d.code)+'</b><small>'+Number(d.percent)+'% off · '+(d.expires_at?'Expires '+esc(new Date(d.expires_at).toLocaleDateString()):'No expiry set')+'</small></div><span class="pill">'+(d.active?'Saved':'Inactive')+'</span></div>';
  }).join('');
  showModal('Your PixelCart account',
-  '<p>Welcome to PixelCart.</p><p class="muted">Signed in as <b>'+esc(pcCustomerSession.user.email||'Customer')+'</b></p>'+
+  '<p>Welcome, '+esc(pcCustomerSession.user.user_metadata?.full_name||'Customer')+'.</p><p class="muted">Signed in as <b>'+esc(pcCustomerSession.user.email||'Customer')+'</b></p>'+
   '<h3>My Discounts</h3>'+(error?'<div class="notice">Could not load saved discounts. '+esc(error.message)+'</div>':list||'<div class="empty">No saved discounts yet. Scan a PixelCart discount QR code while signed in.</div>')+
   '<button class="ghost" style="width:100%;margin-top:14px" onclick="pcLogout()">Sign out</button>');
 };
@@ -611,7 +611,7 @@ async function pcCloudLoad(){
  if(pcOwnerSession){
   const o=await sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false});
   if(o.error)throw o.error;
-  if(o.data?.length){db.orders=o.data.map(x=>x.data);loaded=true}
+  db.orders=(o.data||[]).map(x=>x.data);loaded=true
  }
  if(loaded){pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');save();renderTree();renderProducts()}
  return loaded;
