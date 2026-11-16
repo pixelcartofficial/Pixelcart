@@ -82,8 +82,16 @@ begin
 
   for v_item in select value from jsonb_array_elements(p_order->'items')
   loop
-    if jsonb_typeof(v_item) <> 'object'
-       or coalesce(v_item->>'qty','') !~ '^[0-9]{1,2}
+    if jsonb_typeof(v_item) <> 'object' then
+      raise exception 'Invalid cart item.';
+    end if;
+    if coalesce(v_item->>'id','') = '' then
+      raise exception 'A cart item is missing its product ID.';
+    end if;
+    if coalesce(v_item->>'qty','') !~ '^[0-9]{1,2}$' then
+      raise exception 'Invalid item quantity.';
+    end if;
+    v_qty := (v_item->>'qty')::integer;
     if v_qty < 1 or v_qty > 50 then
       raise exception 'Invalid item quantity.';
     end if;
@@ -101,7 +109,10 @@ begin
     if jsonb_typeof(v_options) <> 'array' then
       raise exception 'Product options are not configured correctly.';
     end if;
-    if coalesce(v_item->>'variantIndex','-1') !~ '^-?[0-9]{1,3}
+    if coalesce(v_item->>'variantIndex','-1') !~ '^-?[0-9]{1,3}$' then
+      raise exception 'Choose a valid product option.';
+    end if;
+    v_variant_index := coalesce((v_item->>'variantIndex')::integer,-1);
 
     if jsonb_array_length(v_options) > 0 then
       if v_variant_index < 0 or v_variant_index >= jsonb_array_length(v_options) then
