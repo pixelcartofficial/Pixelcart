@@ -582,5 +582,113 @@ if(new URLSearchParams(location.search).has('claim_discount')&&!pcCustomerSessio
 }
 </script>
 
+
+<script>
+// Cloud data tools for PixelCart. Existing local data remains untouched until import.
+let pcCloudReady=false;
+let pcCloudSaveTimer=null;
+async function pcCloudLoad(){
+ const sb=pcInitSupabase();
+ const [c,p,fv,r,st]=await Promise.all([
+  sb.from('pixelcart_categories').select('id,data'),
+  sb.from('pixelcart_products').select('id,data'),
+  sb.from('pixelcart_delivery_fees').select('country,fee'),
+  sb.from('pixelcart_reviews').select('id,data'),
+  sb.from('pixelcart_store_settings').select('data').eq('id','main').maybeSingle()
+ ]);
+ for(const x of [c,p,fv,r,st])if(x.error)throw x.error;
+ let loaded=false;
+ if(c.data?.length){db.categories=c.data.map(x=>x.data);loaded=true}
+ if(p.data?.length){db.products=p.data.map(x=>x.data);loaded=true}
+ if(fv.data?.length){db.fees=Object.fromEntries(fv.data.map(x=>[x.country,Number(x.fee)]));loaded=true}
+ if(r.data?.length){db.reviews=r.data.map(x=>x.data);loaded=true}
+ if(st.data?.data){pcSettings={...pcSettings,...st.data.data};pcApplySettings();loaded=true}
+ if(pcOwnerSession){
+  const o=await sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false});
+  if(o.error)throw o.error;
+  if(o.data?.length){db.orders=o.data.map(x=>x.data);loaded=true}
+ }
+ if(loaded){pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');save();renderTree();renderProducts()}
+ return loaded;
+}
+async function pcCloudUpsert(table,rows){
+ if(!rows.length)return;
+ const {error}=await pcInitSupabase().from(table).upsert(rows);
+ if(error)throw error;
+}
+function pcCloudPanel(){
+ return '<p class="muted">Keep PixelCart data in Supabase so the same catalogue and store information can be used across devices.</p>'+
+ '<div class="notice">Your existing browser data is not deleted. Import it once from the device that has your current store data. Run both SQL setup files in Supabase first.</div>'+
+ '<button style="width:100%" onclick="pcImportLocalData()">Import this device’s data to Supabase</button>'+
+ '<button class="ghost" style="width:100%;margin-top:9px" onclick="pcRefreshCloud()">Refresh data from Supabase</button>'+
+ '<p class="meta">Cloud import includes products, categories, historical orders, reviews, delivery fees, discounts and store appearance. Product images are uploaded to Supabase Storage.</p>';
+}
+async function pcRefreshCloud(){
+ try{const loaded=await pcCloudLoad();toast(loaded?'Cloud data loaded.':'No cloud data found yet.');adminHome('cloud')}
+ catch(e){toast('Cloud refresh failed: '+e.message)}
+}
+async function pcImportLocalData(){
+ if(!pcRequireOwner())return;
+ if(!confirm('Import this device’s current PixelCart data to Supabase? Matching cloud records will be updated.'))return;
+ try{
+  toast('Importing PixelCart data…');
+  for(const p of db.products){
+   if(p.image?.startsWith('data:')){
+    const blob=await (await fetch(p.image)).blob();
+    const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');
+    const path='products/'+String(p.id)+'-'+Date.now()+'.'+ext;
+    const up=await pcInitSupabase().storage.from('pixelcart-product-media').upload(path,blob,{upsert:true,contentType:blob.type});
+    if(up.error)throw up.error;
+    p.image=pcInitSupabase().storage.from('pixelcart-product-media').getPublicUrl(path).data.publicUrl;
+   }
+  }
+  await pcCloudUpsert('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
+  await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
+  await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
+  await pcCloudUpsert('pixelcart_orders',db.orders.map(x=>({id:String(x.id),customer_id:null,data:x})));
+  await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
+  const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
+  if(settings.error)throw settings.error;
+  for(const d of db.discounts||[]){
+   if(!d.code||!d.percent)continue;
+   const ins=await pcInitSupabase().from('pixelcart_discounts').upsert({code:String(d.code).toUpperCase(),percent:Number(d.percent),active:true},{onConflict:'code'});
+   if(ins.error)throw ins.error;
+  }
+  pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');
+  await pcCloudLoad();
+  showModal('Cloud import complete','<p>Your store data has been copied to Supabase. The original local copy remains on this device as a backup.</p><button style="width:100%" onclick="adminHome(\'cloud\')">Back to cloud sync</button>');
+ }catch(e){toast('Import stopped: '+(e.message||'Check SQL setup and permissions.'))}
+}
+const pcSaveLocal=window.save;
+window.save=function(){pcSaveLocal();if(pcOwnerSession&&pcCloudReady){clearTimeout(pcCloudSaveTimer);pcCloudSaveTimer=setTimeout(async()=>{
+ try{
+  await pcCloudUpsert('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
+  await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
+  await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
+  await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
+  await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
+ }catch(e){toast('Cloud save failed: '+e.message)}
+ },600)}};
+const pcRouteBeforeCloud=window.pcRouteSession;
+window.pcRouteSession=async function(session){
+ await pcRouteBeforeCloud(session);
+ if(session?.user){try{await pcCloudLoad()}catch(e){toast('Cloud data could not load: '+e.message)}}
+};
+window.placeOrder=async function(){
+ const name=(document.getElementById('coName')?.value||pcCustomerSession?.user?.user_metadata?.full_name||'').trim();
+ const phone=(document.getElementById('coPhone')?.value||'').trim();
+ const address=(document.getElementById('coAddress')?.value||'').trim();
+ if(!name)return toast('Your full name is required for every order.');
+ if(!phone||!address)return toast('Please complete phone number and delivery address.');
+ const order={name,phone,address,country:document.getElementById('coCountry').value,city:document.getElementById('coCity').value.trim(),items:cart.map(x=>({...x}))};
+ try{
+  const {data,error}=await pcInitSupabase().rpc('pixelcart_place_order',{p_order:order});
+  if(error)throw error;
+  cart=[];updateCartCount();closeModal();await pcCloudLoad();toast('Your order was placed successfully.');
+ }catch(e){toast(e.message||'Could not place your order.')}
+};
+(async()=>{try{await pcCloudLoad()}catch(e){console.warn('PixelCart cloud data:',e.message)}})();
+</script>
+
 </body>
 </html>
