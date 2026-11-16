@@ -594,16 +594,17 @@ let pcCloudReady=false;
 let pcCloudSaveTimer=null;
 async function pcCloudLoad(){
  const sb=pcInitSupabase();
- const [c,p,fv,r,st]=await Promise.all([
+ const [c,p,fv,r,st,meta]=await Promise.all([
   sb.from('pixelcart_categories').select('id,data'),
   sb.from('pixelcart_products').select('id,data'),
   sb.from('pixelcart_delivery_fees').select('country,fee'),
   sb.from('pixelcart_reviews').select('id,data'),
-  sb.from('pixelcart_store_settings').select('data').eq('id','main').maybeSingle()
+  sb.from('pixelcart_store_settings').select('data').eq('id','main').maybeSingle(),
+  sb.from('pixelcart_meta').select('data').eq('id','main').maybeSingle()
  ]);
- for(const x of [c,p,fv,r,st])if(x.error)throw x.error;
+ for(const x of [c,p,fv,r,st,meta])if(x.error)throw x.error;
  let loaded=false;
- const cloudInitialized=Boolean(st.data?.data)||Boolean(c.data?.length||p.data?.length||fv.data?.length||r.data?.length);
+ const cloudInitialized=Boolean(meta.data?.data?.initialized)||Boolean(st.data?.data)||Boolean(c.data?.length||p.data?.length||fv.data?.length||r.data?.length);
  if(cloudInitialized){
   db.categories=(c.data||[]).map(x=>x.data);
   db.products=(p.data||[]).map(x=>x.data);
@@ -675,6 +676,8 @@ async function pcImportLocalData(){
   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
   const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
   if(settings.error)throw settings.error;
+  const marker=await pcInitSupabase().from('pixelcart_meta').upsert({id:'main',data:{initialized:true,initialized_at:new Date().toISOString()}});
+  if(marker.error)throw marker.error;
   for(const d of db.discounts||[]){
    if(!d.code||!d.percent)continue;
    const ins=await pcInitSupabase().from('pixelcart_discounts').upsert({code:String(d.code).toUpperCase(),percent:Number(d.percent),active:true},{onConflict:'code'});
