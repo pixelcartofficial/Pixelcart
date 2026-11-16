@@ -53,6 +53,11 @@ create table if not exists public.pixelcart_store_settings (
   data jsonb not null,
   updated_at timestamptz not null default now()
 );
+create table if not exists public.pixelcart_meta (
+  id text primary key default 'main' check (id = 'main'),
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
 
 -- QR tokens are random, unguessable values. The QR must contain the token,
 -- not the discount's human-readable code.
@@ -81,6 +86,7 @@ alter table public.pixelcart_orders enable row level security;
 alter table public.pixelcart_reviews enable row level security;
 alter table public.pixelcart_delivery_fees enable row level security;
 alter table public.pixelcart_store_settings enable row level security;
+alter table public.pixelcart_meta enable row level security;
 alter table public.pixelcart_discounts enable row level security;
 alter table public.pixelcart_customer_discounts enable row level security;
 
@@ -116,6 +122,13 @@ for all to authenticated using (public.pixelcart_is_owner())
 with check (public.pixelcart_is_owner());
 drop policy if exists "PixelCart settings owner manage" on public.pixelcart_store_settings;
 create policy "PixelCart settings owner manage" on public.pixelcart_store_settings
+for all to authenticated using (public.pixelcart_is_owner())
+with check (public.pixelcart_is_owner());
+drop policy if exists "PixelCart meta public read" on public.pixelcart_meta;
+create policy "PixelCart meta public read" on public.pixelcart_meta
+for select to anon, authenticated using (true);
+drop policy if exists "PixelCart meta owner manage" on public.pixelcart_meta;
+create policy "PixelCart meta owner manage" on public.pixelcart_meta
 for all to authenticated using (public.pixelcart_is_owner())
 with check (public.pixelcart_is_owner());
 drop policy if exists "PixelCart discounts owner manage" on public.pixelcart_discounts;
