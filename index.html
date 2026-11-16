@@ -217,10 +217,6 @@ async function pcGetRole(user){
 async function pcLogin(){
  const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
  const password=document.getElementById('pcPassword')?.value||'';
- const fullName=(document.getElementById('pcFullName')?.value||'').trim();
-
- if(!fullName)return toast('Enter your full name to create your account.');
- if(fullName.length>120)return toast('Please enter a name under 120 characters.');
  if(!email||!password)return toast('Enter your email and password.');
 
  try{
@@ -236,7 +232,10 @@ async function pcLogin(){
 async function pcSignUp(){
  const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
  const password=document.getElementById('pcPassword')?.value||'';
+ const fullName=(document.getElementById('pcFullName')?.value||'').trim();
 
+ if(!fullName)return toast('Enter your full name.');
+ if(fullName.length>120)return toast('Please enter a name under 120 characters.');
  if(!email||!password)return toast('Enter your email and password.');
  if(password.length<8)return toast('Use a password with at least 8 characters.');
 
@@ -598,11 +597,17 @@ async function pcCloudLoad(){
  ]);
  for(const x of [c,p,fv,r,st])if(x.error)throw x.error;
  let loaded=false;
- if(c.data?.length){db.categories=c.data.map(x=>x.data);loaded=true}
- if(p.data?.length){db.products=p.data.map(x=>x.data);loaded=true}
- if(fv.data?.length){db.fees=Object.fromEntries(fv.data.map(x=>[x.country,Number(x.fee)]));loaded=true}
- if(r.data?.length){db.reviews=r.data.map(x=>x.data);loaded=true}
- if(st.data?.data){pcSettings={...pcSettings,...st.data.data};pcApplySettings();loaded=true}
+ const cloudInitialized=Boolean(st.data?.data)||Boolean(c.data?.length||p.data?.length||fv.data?.length||r.data?.length);
+ if(cloudInitialized){
+  db.categories=(c.data||[]).map(x=>x.data);
+  db.products=(p.data||[]).map(x=>x.data);
+  db.fees=Object.fromEntries((fv.data||[]).map(x=>[x.country,Number(x.fee)]));
+  db.reviews=(r.data||[]).map(x=>({...x.data,id:x.id}));
+  if(st.data?.data){pcSettings={...pcSettings,...st.data.data};pcApplySettings()}
+  pcCloudReady=true;
+  localStorage.setItem('pixelcart_cloud_ready','1');
+  loaded=true;
+ }
  if(pcOwnerSession){
   const o=await sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false});
   if(o.error)throw o.error;
@@ -612,9 +617,22 @@ async function pcCloudLoad(){
  return loaded;
 }
 async function pcCloudUpsert(table,rows){
- if(!rows.length)return;
- const {error}=await pcInitSupabase().from(table).upsert(rows);
- if(error)throw error;
+ if(rows.length){
+  const {error}=await pcInitSupabase().from(table).upsert(rows);
+  if(error)throw error;
+ }
+}
+async function pcCloudReconcile(table,rows){
+ const sb=pcInitSupabase();
+ await pcCloudUpsert(table,rows);
+ const current=await sb.from(table).select('id');
+ if(current.error)throw current.error;
+ const keep=new Set(rows.map(x=>String(x.id)));
+ const stale=(current.data||[]).map(x=>String(x.id)).filter(id=>!keep.has(id));
+ for(const id of stale){
+  const removed=await sb.from(table).delete().eq('id',id);
+  if(removed.error)throw removed.error;
+ }
 }
 function pcCloudPanel(){
  return '<p class="muted">Keep PixelCart data in Supabase so the same catalogue and store information can be used across devices.</p>'+
@@ -659,15 +677,50 @@ async function pcImportLocalData(){
   showModal('Cloud import complete','<p>Your store data has been copied to Supabase. The original local copy remains on this device as a backup.</p><button style="width:100%" onclick="adminHome(\'cloud\')">Back to cloud sync</button>');
  }catch(e){toast('Import stopped: '+(e.message||'Check SQL setup and permissions.'))}
 }
+// Send newly uploaded product images to Supabase Storage before saving the product.
+const pcFinishSaveProductLocal=window.finishSaveProduct;
+window.finishSaveProduct=async function(id,p){
+ try{
+  if(typeof p.image==='string'&&p.image.startsWith('data:')){
+   const blob=await (await fetch(p.image)).blob();
+   const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');
+   const path='products/'+String(p.id)+'-'+Date.now()+'.'+ext;
+   const uploaded=await pcInitSupabase().storage.from('pixelcart-product-media').upload(path,blob,{upsert:false,contentType:blob.type});
+   if(uploaded.error)throw uploaded.error;
+   p.image=pcInitSupabase().storage.from('pixelcart-product-media').getPublicUrl(path).data.publicUrl;
+  }
+  pcFinishSaveProductLocal(id,p);
+  if(pcOwnerSession&&pcCloudReady){await pcCloudUpsert('pixelcart_products',[{id:String(p.id),data:p}]);}
+  toast('Product saved and image uploaded.');
+ }catch(e){toast('Product saved locally, but cloud upload failed: '+e.message)}
+};
+// Customer reviews are stored under the signed-in customer's Supabase identity.
+window.submitReview=async function(id){
+ if(!pcCustomerSession)return toast('Sign in to submit a review.');
+ const p=db.products.find(x=>x.id===id);
+ const rating=Number(document.getElementById('revRating')?.value||5);
+ const name=(document.getElementById('revName')?.value||pcCustomerSession.user.user_metadata?.full_name||'Customer').trim();
+ const reviewText=(document.getElementById('revText')?.value||'').trim();
+ if(!reviewText)return toast('Write a short review first.');
+ try{
+  const review={id:'review-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),productId:id,productName:p?.name||'',name,rating,text:reviewText};
+  const {error}=await pcInitSupabase().from('pixelcart_reviews').insert({id:review.id,product_id:String(id),customer_id:pcCustomerSession.user.id,data:review});
+  if(error)throw error;
+  db.reviews.unshift(review);
+  recalcRatings();
+  closeModal();renderProducts();toast('Review submitted.');
+ }catch(e){toast(e.message||'Could not submit your review.')}
+};
+
 const pcSaveSettingsOriginal=window.pcSaveSettings;
 window.pcSaveSettings=function(){pcSaveSettingsOriginal();if(pcOwnerSession&&pcCloudReady){pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings}).then(({error})=>{if(error)toast('Cloud settings save failed: '+error.message)})}};
 const pcSaveLocal=window.save;
 window.save=function(){pcSaveLocal();if(pcOwnerSession&&pcCloudReady){clearTimeout(pcCloudSaveTimer);pcCloudSaveTimer=setTimeout(async()=>{
  try{
-  await pcCloudUpsert('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
-  await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
+  await pcCloudReconcile('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
+  await pcCloudReconcile('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
-  await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
+  await pcCloudReconcile('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
   for(const order of db.orders){const updated=await pcInitSupabase().from('pixelcart_orders').update({data:order}).eq('id',String(order.id));if(updated.error)throw updated.error;}
   const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});if(settings.error)throw settings.error;
  }catch(e){toast('Cloud save failed: '+e.message)}
