@@ -139,9 +139,18 @@ function pcLoadSettings(){
 }
 let pcSettings=pcLoadSettings();
 
+const PC_DEFAULT_SUPABASE_CONFIG={
+ url:'https://zzgmyxainwitaaajumnb.supabase.co',
+ key:'sb_publishable_6VeVRy4Scgwh45TJNlG7fw_46SUh1tm'
+};
+
 function pcGetConfig(){
- try{return JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null')}
- catch(e){return null}
+ try{
+  const saved=JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null');
+  return saved?.url&&saved?.key?saved:PC_DEFAULT_SUPABASE_CONFIG;
+ }catch(e){
+  return PC_DEFAULT_SUPABASE_CONFIG;
+ }
 }
 
 function pcInitSupabase(){
