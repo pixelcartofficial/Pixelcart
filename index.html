@@ -18,6 +18,8 @@
 <div class="brand">Pixel<span>Cart</span></div>
 <div class="search"><input id="search" placeholder="Search products, colors, codes, SKUs…" oninput="renderProducts()"></div>
 <div class="nav-actions">
+<button class="ghost" id="languageToggle" type="button" onclick="pcToggleLanguage()" aria-label="Switch language">العربية</button>
+
 <button class="ghost" onclick="toggleTheme()" title="Switch theme">◐</button>
 <button class="ghost" onclick="openCart()">Cart <span id="cartCount">0</span></button>
 <button onclick="openAccount()">Account</button>
@@ -74,9 +76,9 @@ function viewProduct(id){let p=db.products.find(x=>x.id===id);recent=[id,...rece
 function openCart(){let total=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Your cart',cart.length?cart.map((x,i)=>{let p=db.products.find(p=>p.id===x.id);return `<div class="cart-line"><div><b>${esc(p?.name||'Product')}</b><div class="meta">${esc(x.label)}</div>${money(x.price)} each</div><div class="row" style="min-width:110px"><button class="ghost" onclick="changeQty(${i},-1)">−</button><b>${x.qty}</b><button class="ghost" onclick="changeQty(${i},1)">+</button></div><div class="line-total"><b>${money(x.qty*x.price)}</b> <button class="danger" onclick="removeCart(${i})">×</button></div></div>`}).join('')+`<h3 style="text-align:right">Subtotal: ${money(total)}</h3><button style="width:100%" onclick="checkout()">Continue to Cash on Delivery</button>`:'<div class="empty">Your cart is empty.</div>')}
 function changeQty(i,d){let x=cart[i],p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null,max=v?v.stock:p.stock;if(d>0&&x.qty>=max)return toast('Stock limit reached.');x.qty+=d;if(x.qty<=0)cart.splice(i,1);openCart();updateCartCount()}
 function removeCart(i){cart.splice(i,1);openCart();updateCartCount()}
-function checkout(){if(!cart.length)return;let subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0);let accountName=(pcCustomerSession?.user?.user_metadata?.full_name||'').trim();let nameField=accountName?`<input id="coName" type="text" value="${esc(accountName)}" readonly>`:`<input id="coName" type="text" autocomplete="name" maxlength="120" placeholder="Enter your full name" required>`;showModal('Cash on Delivery checkout',`<div class="notice">Demo checkout only. No courier booking or real payment is made.</div><div class="form-grid"><div><label>Full name <span class="meta">(required for every order)</span></label>${nameField}</div><div><label>Phone number</label><input id="coPhone" required></div><div><label>Country</label><select id="coCountry" onchange="updateCheckoutFee()"><option>Kuwait</option><option>SaudiArabia</option><option>UAE</option><option>Qatar</option><option>Bahrain</option><option>Oman</option></select></div><div><label>City / area</label><input id="coCity"></div><div class="wide"><label>Full delivery address</label><textarea id="coAddress" rows="2"></textarea></div></div><p>Subtotal: <b>${money(subtotal)}</b></p><p>Demo delivery estimate: <b id="coFee">${money(db.fees.Kuwait)}</b></p><p>Total due on delivery: <b id="coTotal">${money(subtotal+Number(db.fees.Kuwait))}</b></p><button style="width:100%" onclick="placeOrder()">Place COD order</button>`)}
+function checkout(){if(!cart.length)return;let subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Cash on Delivery checkout',`<div class="notice">Demo checkout only. No courier booking or real payment is made.</div><div class="form-grid"><div><label>Full name</label><input id="coName" required></div><div><label>Phone number</label><input id="coPhone" required></div><div><label>Country</label><select id="coCountry" onchange="updateCheckoutFee()"><option>Kuwait</option><option>SaudiArabia</option><option>UAE</option><option>Qatar</option><option>Bahrain</option><option>Oman</option></select></div><div><label>City / area</label><input id="coCity"></div><div class="wide"><label>Full delivery address</label><textarea id="coAddress" rows="2"></textarea></div></div><p>Subtotal: <b>${money(subtotal)}</b></p><p>Demo delivery estimate: <b id="coFee">${money(db.fees.Kuwait)}</b></p><p>Total due on delivery: <b id="coTotal">${money(subtotal+Number(db.fees.Kuwait))}</b></p><button style="width:100%" onclick="placeOrder()">Place COD order</button>`)}
 function updateCheckoutFee(){let c=document.getElementById('coCountry').value,f=Number(db.fees[c]||0),s=cart.reduce((a,x)=>a+x.qty*x.price,0);document.getElementById('coFee').textContent=money(f);document.getElementById('coTotal').textContent=money(s+f)}
-function placeOrder(){let name=(document.getElementById('coName')?.value||pcCustomerSession?.user?.user_metadata?.full_name||'').trim(),phone=document.getElementById('coPhone').value.trim(),address=document.getElementById('coAddress').value.trim();if(!name)return toast('Your full name is required for every order, whether you are a guest or signed in.');if(name.length>120)return toast('Please enter a name under 120 characters.');if(!phone||!address)return toast('Please complete phone number and delivery address.');let country=document.getElementById('coCountry').value,subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0),fee=Number(db.fees[country]||0);cart.forEach(x=>{let p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null;if(v)v.stock-=x.qty;else p.stock-=x.qty;p.stock=p.options?.length?p.options.reduce((a,o)=>a+Number(o.stock),0):p.stock});db.orders.unshift({id:'ORD-'+Date.now().toString().slice(-7),name,phone,address,country,city:document.getElementById('coCity').value,items:cart.map(x=>({...x})),subtotal,fee,total:subtotal+fee,status:'New',date:new Date().toLocaleString()});save();cart=[];updateCartCount();closeModal();renderProducts();toast('Demo order saved on this device.')}
+function placeOrder(){let name=document.getElementById('coName').value.trim(),phone=document.getElementById('coPhone').value.trim(),address=document.getElementById('coAddress').value.trim();if(!name||!phone||!address)return toast('Please complete name, phone and address.');let country=document.getElementById('coCountry').value,subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0),fee=Number(db.fees[country]||0);cart.forEach(x=>{let p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null;if(v)v.stock-=x.qty;else p.stock-=x.qty;p.stock=p.options?.length?p.options.reduce((a,o)=>a+Number(o.stock),0):p.stock});db.orders.unshift({id:'ORD-'+Date.now().toString().slice(-7),name,phone,address,country,city:document.getElementById('coCity').value,items:cart.map(x=>({...x})),subtotal,fee,total:subtotal+fee,status:'New',date:new Date().toLocaleString()});save();cart=[];updateCartCount();closeModal();renderProducts();toast('Demo order saved on this device.')}
 
 function openAdmin(){openAccount()}
 function unlockAdmin(){openAccount()}
@@ -113,7 +115,7 @@ renderAll();
 
 <script>
 // PIXELCART V9 — Shared customer/owner account with server-verified roles.
-const PC_OWNER_EMAILS=['hassan.ahmadalamir@gmail.com','mohammadalnasser093@gmail.com'];
+const PC_OWNER_EMAIL='hassan.ahmadalamir@gmail.com';
 const PC_CFG_KEY='pixelcart_supabase_config_v1';
 const PC_SETTINGS_KEY='pixelcart_store_settings_v1';
 
@@ -139,18 +141,9 @@ function pcLoadSettings(){
 }
 let pcSettings=pcLoadSettings();
 
-const PC_DEFAULT_SUPABASE_CONFIG={
- url:'https://zzgmyxainwitaaajumnb.supabase.co',
- key:'sb_publishable_6VeVRy4Scgwh45TJNlG7fw_46SUh1tm'
-};
-
 function pcGetConfig(){
- try{
-  const saved=JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null');
-  return saved?.url&&saved?.key?saved:PC_DEFAULT_SUPABASE_CONFIG;
- }catch(e){
-  return PC_DEFAULT_SUPABASE_CONFIG;
- }
+ try{return JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null')}
+ catch(e){return null}
 }
 
 function pcInitSupabase(){
@@ -199,7 +192,6 @@ function pcShowAccount(mode='login',message=''){
  showModal(isSignup?'Create your account':'Sign in to PixelCart',
  `<p class="muted">${isSignup?'Create a customer account to use PixelCart.':'Sign in to your PixelCart account.'}</p>
  ${message?`<div class="notice">${esc(message)}</div>`:''}
- ${isSignup?`<label>Full name</label><input id="pcFullName" type="text" autocomplete="name" maxlength="120" placeholder="Your full name" required>`:''}
  <label>Email address</label>
  <input id="pcEmail" type="email" autocomplete="email" placeholder="you@example.com">
  <label>Password</label>
@@ -226,6 +218,7 @@ async function pcGetRole(user){
 async function pcLogin(){
  const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
  const password=document.getElementById('pcPassword')?.value||'';
+
  if(!email||!password)return toast('Enter your email and password.');
 
  try{
@@ -241,10 +234,7 @@ async function pcLogin(){
 async function pcSignUp(){
  const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
  const password=document.getElementById('pcPassword')?.value||'';
- const fullName=(document.getElementById('pcFullName')?.value||'').trim();
 
- if(!fullName)return toast('Enter your full name.');
- if(fullName.length>120)return toast('Please enter a name under 120 characters.');
  if(!email||!password)return toast('Enter your email and password.');
  if(password.length<8)return toast('Use a password with at least 8 characters.');
 
@@ -257,8 +247,7 @@ async function pcSignUp(){
   const sb=pcInitSupabase();
   const {data,error}=await sb.auth.signUp({
    email,
-   password,
-   options:{data:{full_name:fullName}}
+   password
   });
   if(error)throw error;
 
@@ -297,7 +286,7 @@ async function pcRouteSession(session){
   return;
  }
 
- if(role==='owner'&&PC_OWNER_EMAILS.includes((user.email||'').toLowerCase())){
+ if(role==='owner'&&user.email?.toLowerCase()===PC_OWNER_EMAIL){
   pcOwnerSession=session;
   pcCustomerSession=null;
   toast('Owner signed in.');
@@ -392,7 +381,7 @@ function pcSaveConfig(){
 function adminHome(tab='products'){
  if(!pcRequireOwner())return;
 
- const tabs=['products','categories','orders','reviews','delivery','discounts','store','cloud'];
+ const tabs=['products','categories','orders','reviews','delivery','discounts','store','connection'];
 
  showModal('PixelCart owner dashboard',
  `<div class="pc-owner-status">Verified owner account</div>
@@ -403,7 +392,7 @@ function adminHome(tab='products'){
    <button class="secondary" onclick="pcToggleEditMode()">${pcEditMode?'Turn off':'Turn on'} website Edit Mode</button>
    <button class="ghost" onclick="pcLogout()">Sign out</button>
   </div>
-  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='cloud'?pcCloudPanel():adminContent(tab)}</div>`);
+  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='connection'?pcConnectionForm():adminContent(tab)}</div>`);
 }
 
 function pcStoreSettingsForm(){
@@ -426,7 +415,7 @@ function pcStoreSettingsForm(){
  </select></div>
  <div class="wide"><button style="width:100%" onclick="pcSaveStoreForm()">Save store changes</button></div>
  </div>
- <div class="notice">Store appearance is saved to Supabase when cloud sync is connected. Use the Cloud tab to import your existing catalogue and store data before switching devices.</div>`;
+ <div class="notice">Your current product catalogue, orders, reviews, categories, delivery estimates and discounts are still stored in this browser. Connecting Supabase login does not automatically move that data to the cloud.</div>`;
 }
 
 function pcSaveStoreForm(){
@@ -447,15 +436,9 @@ function pcSaveStoreForm(){
 function pcToggleEditMode(){
  if(!pcRequireOwner())return;
  pcEditMode=!pcEditMode;
- closeModal();
- if(pcEditMode){
-  renderProducts();
-  pcAddInlineEditButtons();
-  toast('Website Edit Mode is on. Select Edit product on a storefront card.');
- }else{
-  document.querySelectorAll('.pc-inline-edit').forEach(button=>button.remove());
-  toast('Website Edit Mode is off.');
- }
+ adminHome('products');
+ pcAddInlineEditButtons();
+ toast(pcEditMode?'Website Edit Mode is on.':'Website Edit Mode is off.');
 }
 
 function pcAddInlineEditButtons(){
@@ -500,305 +483,76 @@ pcApplySettings();
 </script>
 
 <script>
-// PixelCart cloud connection + account-bound discount QR codes.
-// The publishable key is intended for browser use; database RLS remains essential.
-const PC_SUPABASE_URL='https://zzgmyxainwitaaajumnb.supabase.co';
-const PC_SUPABASE_PUBLISHABLE_KEY='sb_publishable_6VeVRy4Scgwh45TJNlG7fw_46SUh1tm';
-window.pcInitSupabase=function(){
- if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');
- if(!pcSupabase)pcSupabase=window.supabase.createClient(PC_SUPABASE_URL,PC_SUPABASE_PUBLISHABLE_KEY);
- return pcSupabase;
+// PixelCart bilingual storefront: English + Arabic.
+const PC_LANG_KEY='pixelcart_language_v1';
+let pcLanguage=localStorage.getItem(PC_LANG_KEY)==='ar'?'ar':'en';
+const pcTranslations={
+ 'PixelCart':'بيكسل كارت','Find your next favourite.':'اعثر على منتجاتك المفضلة.','Discover useful things, all in one place.':'اكتشف منتجات مفيدة، كلها في مكان واحد.',
+ 'Search products, colors, codes, SKUs…':'ابحث عن المنتجات والألوان والرموز…','Cart':'السلة','Account':'حسابي','Categories':'الفئات','Quick filters':'تصفية سريعة',
+ 'Availability':'التوفر','All products':'كل المنتجات','In stock':'متوفر','Sold out':'نفد المخزون','Minimum rating':'أقل تقييم','Any rating':'أي تقييم','Brand':'العلامة التجارية','All brands':'كل العلامات التجارية',
+ 'Min price (KWD)':'أقل سعر (د.ك)','Max price (KWD)':'أعلى سعر (د.ك)','No limit':'بلا حد','Color / option':'اللون / الخيار','e.g. Navy, 128GB':'مثال: كحلي، 128GB',
+ 'Sort by':'ترتيب حسب','Newest':'الأحدث','Price: low to high':'السعر: من الأقل إلى الأعلى','Price: high to low':'السعر: من الأعلى إلى الأقل','Best rated':'الأعلى تقييماً','Name A–Z':'الاسم من أ إلى ي',
+ 'Clear all filters':'مسح كل عوامل التصفية','No products match those filters. Try clearing some filters.':'لا توجد منتجات تطابق عوامل التصفية. جرّب مسح بعضها.',
+ 'Prices shown in KWD':'الأسعار بالدينار الكويتي','Cash on Delivery demo':'الدفع عند الاستلام (نسخة تجريبية)',
+ 'Details':'التفاصيل','Add to cart':'أضف إلى السلة','SOLD OUT':'نفد المخزون','No reviews':'لا توجد تقييمات','in stock':'متوفر في المخزون',
+ 'Your cart':'سلة التسوق','Your cart is empty.':'سلة التسوق فارغة.','Continue to Cash on Delivery':'متابعة للدفع عند الاستلام','Subtotal:':'المجموع الفرعي:',
+ 'Close':'إغلاق','Panel':'لوحة','Your PixelCart account':'حسابك في بيكسل كارت','Sign in to PixelCart':'تسجيل الدخول إلى بيكسل كارت','Create your account':'إنشاء حسابك',
+ 'Email address':'البريد الإلكتروني','Password':'كلمة المرور','Sign in':'تسجيل الدخول','Create a customer account':'إنشاء حساب عميل','Already have an account? Sign in':'لديك حساب بالفعل؟ سجّل الدخول',
+ 'Your name':'اسمك','Rating':'التقييم','Your review':'مراجعتك','Submit review':'إرسال المراجعة','Write a review':'اكتب مراجعة',
+ 'Choose an option':'اختر خياراً','Product number:':'رقم المنتج:','Watch product video ↗':'شاهد فيديو المنتج ↗','Available':'متاح','Delivery':'التوصيل','Discounts':'الخصومات','Orders':'الطلبات','Reviews':'المراجعات',
+ 'Products':'المنتجات','Store design':'تصميم المتجر','Connection':'الاتصال','Verified owner account':'تم التحقق من حساب المالك',
+ 'Owner signed in.':'تم تسجيل دخول المالك.','Signed out':'تم تسجيل الخروج','You have signed out of PixelCart.':'لقد سجلت الخروج من بيكسل كارت.',
+ 'Store settings saved on this device.':'تم حفظ إعدادات المتجر على هذا الجهاز.','Store settings':'إعدادات المتجر','Store name':'اسم المتجر','Support email':'بريد الدعم',
+ 'Homepage headline':'العنوان الرئيسي للصفحة','Homepage description':'وصف الصفحة الرئيسية','Accent colour':'اللون الأساسي','Hero background — first colour':'لون خلفية الواجهة الأول','Hero background — second colour':'لون خلفية الواجهة الثاني',
+ 'Currency label':'العملة','Save store changes':'حفظ تغييرات المتجر','Save product':'حفظ المنتج','Add product':'إضافة منتج','Edit product':'تعديل المنتج',
+ 'Product name':'اسم المنتج','Description':'الوصف','Price KWD':'السعر بالدينار الكويتي','Stock':'المخزون','Image URL':'رابط الصورة','Brand name':'اسم العلامة التجارية',
+ 'Supabase connection':'اتصال Supabase','Supabase Project URL':'رابط مشروع Supabase','Supabase publishable / anon key':'مفتاح Supabase العام','Save Supabase connection':'حفظ اتصال Supabase',
+ 'All':'الكل','Search':'بحث','Clear':'مسح','Cancel':'إلغاء','Save':'حفظ','Delete':'حذف','Edit':'تعديل','Back':'رجوع','Continue':'متابعة','Apply':'تطبيق',
+ 'Customer access':'صلاحية العميل','Owner dashboard':'لوحة تحكم المالك','Delivery estimates saved.':'تم حفظ تقديرات التوصيل.','Order status updated.':'تم تحديث حالة الطلب.',
+ 'This product is sold out.':'هذا المنتج نفد من المخزون.','Added to cart.':'تمت الإضافة إلى السلة.','Not enough stock.':'الكمية المطلوبة غير متوفرة.','Choose a variant first.':'اختر أحد الخيارات أولاً.',
+ 'Enter your email and password.':'أدخل بريدك الإلكتروني وكلمة المرور.','Write a short review first.':'اكتب مراجعة قصيرة أولاً.','Product name is required.':'اسم المنتج مطلوب.',
+ 'Kuwait':'الكويت','Saudi Arabia':'السعودية','United Arab Emirates':'الإمارات العربية المتحدة','Qatar':'قطر','Bahrain':'البحرين','Oman':'عُمان'
 };
-
-const pcBaseRouteSession=window.pcRouteSession;
-window.pcRouteSession=async function(session){
- await pcBaseRouteSession(session);
- if(session?.user){
-  const token=new URLSearchParams(location.search).get('claim_discount');
-  if(token && pcCustomerSession){
-   try{
-    const {data,error}=await pcInitSupabase().rpc('pixelcart_claim_discount',{p_qr_token:token});
-    if(error)throw error;
-    const row=Array.isArray(data)?data[0]:data;
-    history.replaceState({},'',location.pathname);
-    toast(row?.saved?'Discount saved to your account!':'This discount is already in your account.');
-    await window.pcCustomerHome();
-   }catch(e){toast(e.message||'Could not save this discount.');}
-  }
- }
-};
-
-window.pcCustomerHome=async function(){
- if(!pcCustomerSession)return openAccount();
- const sb=pcInitSupabase();
- const [discountResult,orderResult]=await Promise.all([
-  sb.from('pixelcart_customer_discounts')
-   .select('saved_at,pixelcart_discounts(id,code,percent,expires_at,active)')
-   .order('saved_at',{ascending:false}),
-  sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false})
- ]);
- const rows=discountResult.error?[]:(discountResult.data||[]);
- const list=rows.filter(x=>x.pixelcart_discounts).map(x=>{
-  const d=x.pixelcart_discounts;
-  return '<div class="admin-item"><div><b>'+esc(d.code)+'</b><small>'+Number(d.percent)+'% off · '+(d.expires_at?'Expires '+esc(new Date(d.expires_at).toLocaleDateString()):'No expiry set')+'</small></div><span class="pill">'+(d.active?'Saved':'Inactive')+'</span></div>';
- }).join('');
- const orders=orderResult.error?[]:(orderResult.data||[]).map(x=>x.data);
- const orderList=orders.map(o=>'<div class="admin-item"><div><b>'+esc(o.id||'Order')+' · '+esc(o.status||'New')+'</b><small>'+esc(o.date||'')+' · '+esc(o.country||'')+'</small></div><b>'+money(o.total||0)+'</b></div>').join('');
- showModal('Your PixelCart account',
-  '<p>Welcome, '+esc(pcCustomerSession.user.user_metadata?.full_name||'Customer')+'.</p><p class="muted">Signed in as <b>'+esc(pcCustomerSession.user.email||'Customer')+'</b></p>'+
-  '<h3>My Orders</h3>'+(orderResult.error?'<div class="notice">Could not load your orders. '+esc(orderResult.error.message)+'</div>':orderList||'<div class="empty">You have not placed any orders yet.</div>')+
-  '<h3 style="margin-top:18px">My Discounts</h3>'+(discountResult.error?'<div class="notice">Could not load saved discounts. '+esc(discountResult.error.message)+'</div>':list||'<div class="empty">No saved discounts yet. Scan a PixelCart discount QR code while signed in.</div>')+
-  '<button class="ghost" style="width:100%;margin-top:14px" onclick="pcLogout()">Sign out</button>');
-};
-
-window.createDiscount=async function(){
- if(!pcRequireOwner())return;
- const code=(document.getElementById('discCode')?.value||'').trim().toUpperCase();
- const percent=Number(document.getElementById('discPercent')?.value);
- if(!/^[A-Z0-9_-]{3,32}$/.test(code)||percent<1||percent>90)return toast('Use a 3–32 character code and 1–90%.');
- try{
-  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
-   .insert({code,percent,active:true}).select('id,code,percent,qr_token,active').single();
-  if(error)throw error;
-  db.discounts.unshift({id:data.id,code:data.code,percent:data.percent,qr_token:data.qr_token,used:false});
-  toast('Discount created in Supabase.');
-  await window.adminHome('discounts');
- }catch(e){toast(e.message||'Could not create discount.');}
-};
-
-window.showDiscount=async function(code){
- if(!pcRequireOwner())return;
- try{
-  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
-   .select('id,code,percent,qr_token,active,expires_at').eq('code',code).single();
-  if(error)throw error;
-  const claimUrl=location.origin+location.pathname+'?claim_discount='+encodeURIComponent(data.qr_token);
-  showModal('Discount QR code','<h2>'+esc(data.code)+'</h2><p>'+Number(data.percent)+'% off · '+(data.active?'Active':'Inactive')+'</p>'+
-   '<div class="notice">Customers must sign in before scanning. The discount is saved to their PixelCart account and is not automatically applied to an order.</div>'+
-   '<div id="qrArea" style="margin:15px auto;width:190px"></div><button class="ghost" style="width:100%" onclick="navigator.clipboard?.writeText('+JSON.stringify(claimUrl)+');toast(\'QR link copied\')">Copy QR link</button>');
-  if(window.QRCode)new QRCode(document.getElementById('qrArea'),{text:claimUrl,width:190,height:190});
- }catch(e){toast(e.message||'Could not load discount QR.');}
-};
-
-const pcBaseAdminHome=window.adminHome;
-window.adminHome=async function(tab='products'){
- pcBaseAdminHome(tab);
- if(tab!=='discounts'||!pcOwnerSession)return;
- try{
-  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
-   .select('id,code,percent,active,claim_count,expires_at').order('created_at',{ascending:false});
-  if(error)throw error;
-  const host=document.getElementById('adminContent');
-  if(!host)return;
-  host.innerHTML='<p class="muted">Create account-linked discount QR codes. Scans save the discount to a signed-in customer account.</p>'+
-   '<div class="form-grid"><div><label>Code</label><input id="discCode" placeholder="PIXEL10"></div><div><label>Discount percent</label><input id="discPercent" type="number" min="1" max="90" value="10"></div><div class="wide"><button onclick="createDiscount()">Create code</button></div></div>'+
-   '<div class="admin-list" style="margin-top:12px">'+(data||[]).map(d=>'<div class="admin-item"><div><b>'+esc(d.code)+' · '+Number(d.percent)+'% off</b><small>'+(d.active?'Active':'Inactive')+' · '+Number(d.claim_count||0)+' account saves</small></div><button class="secondary" onclick="showDiscount('+JSON.stringify(d.code)+')">Show QR</button></div>').join('')+'</div>';
- }catch(e){toast(e.message||'Could not load cloud discounts.');}
-};
-
-// A QR scan while signed out is retained in the URL; after sign-in the claim is processed.
-if(new URLSearchParams(location.search).has('claim_discount')&&!pcCustomerSession&&!pcOwnerSession){
- setTimeout(()=>pcShowAccount('login','Sign in or create an account to save this discount.'),0);
+const pcReverseTranslations=Object.fromEntries(Object.entries(pcTranslations).map(([en,ar])=>[ar,en]));
+function pcTranslateText(value){
+ const raw=value,trimmed=raw.trim();if(!trimmed)return raw;
+ let translated=pcLanguage==='ar'?(pcTranslations[trimmed]||trimmed):(pcReverseTranslations[trimmed]||trimmed);
+ if(pcLanguage==='ar')translated=translated.replace(/^(\d+) products? found$/,function(_,n){return 'تم العثور على '+n+' منتج';});
+ else translated=translated.replace(/^تم العثور على (\d+) منتج$/,'$1 products found');
+ return raw.replace(trimmed,translated);
 }
+function pcTranslateElement(root){
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+ while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(function(n){if(n.parentElement&&!['SCRIPT','STYLE','TEXTAREA'].includes(n.parentElement.tagName))n.nodeValue=pcTranslateText(n.nodeValue)});
+ if(root.querySelectorAll)root.querySelectorAll('input[placeholder],textarea[placeholder],button[title],option').forEach(function(el){
+  ['placeholder','title'].forEach(function(a){if(el.hasAttribute(a))el.setAttribute(a,pcTranslateText(el.getAttribute(a)))});
+  if(el.tagName==='OPTION')el.textContent=pcTranslateText(el.textContent);
+ });
+}
+function pcApplyLanguage(){
+ const ar=pcLanguage==='ar';document.documentElement.lang=ar?'ar':'en';document.documentElement.dir=ar?'rtl':'ltr';
+ document.body.classList.toggle('pc-arabic',ar);
+ const b=document.getElementById('languageToggle');
+ if(b){b.textContent=ar?'English':'العربية';b.setAttribute('aria-label',ar?'Switch to English':'التبديل إلى الإنجليزية');}
+ pcTranslateElement(document.body);
+}
+function pcToggleLanguage(){pcLanguage=pcLanguage==='en'?'ar':'en';localStorage.setItem(PC_LANG_KEY,pcLanguage);pcApplyLanguage();}
+const pcLangObserver=new MutationObserver(function(records){records.forEach(function(r){r.addedNodes.forEach(function(n){if(n.nodeType===Node.ELEMENT_NODE)pcTranslateElement(n);else if(n.nodeType===Node.TEXT_NODE)n.nodeValue=pcTranslateText(n.nodeValue)})})});
+pcLangObserver.observe(document.body,{childList:true,subtree:true});
+pcApplyLanguage();
 </script>
-
-
-<script>
-// Cloud data tools for PixelCart. Existing local data remains untouched until import.
-let pcCloudReady=false;
-let pcCloudSaveTimer=null;
-async function pcCloudLoad(){
- const sb=pcInitSupabase();
- const [c,p,fv,r,st,meta]=await Promise.all([
-  sb.from('pixelcart_categories').select('id,data'),
-  sb.from('pixelcart_products').select('id,data'),
-  sb.from('pixelcart_delivery_fees').select('country,fee'),
-  sb.from('pixelcart_reviews').select('id,data'),
-  sb.from('pixelcart_store_settings').select('data').eq('id','main').maybeSingle(),
-  sb.from('pixelcart_meta').select('data').eq('id','main').maybeSingle()
- ]);
- for(const x of [c,p,fv,r,st,meta])if(x.error)throw x.error;
- let loaded=false;
- const cloudInitialized=Boolean(meta.data?.data?.initialized)||Boolean(st.data?.data)||Boolean(c.data?.length||p.data?.length||fv.data?.length||r.data?.length);
- if(cloudInitialized){
-  db.categories=(c.data||[]).map(x=>x.data);
-  db.products=(p.data||[]).map(x=>x.data);
-  db.fees=Object.fromEntries((fv.data||[]).map(x=>[x.country,Number(x.fee)]));
-  db.reviews=(r.data||[]).map(x=>({...x.data,id:x.id}));
-  recalcRatings();
-  if(st.data?.data){pcSettings={...pcSettings,...st.data.data};pcApplySettings()}
-  pcCloudReady=true;
-  localStorage.setItem('pixelcart_cloud_ready','1');
-  loaded=true;
- }
- if(pcOwnerSession){
-  const o=await sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false});
-  if(o.error)throw o.error;
-  db.orders=(o.data||[]).map(x=>x.data);
-  if(o.data?.length)loaded=true;
- }
- if(loaded){pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');save();renderTree();renderProducts()}
- return loaded;
-}
-async function pcCloudUpsert(table,rows){
- if(rows.length){
-  const {error}=await pcInitSupabase().from(table).upsert(rows);
-  if(error)throw error;
- }
-}
-async function pcCloudReconcile(table,rows){
- const sb=pcInitSupabase();
- await pcCloudUpsert(table,rows);
- const current=await sb.from(table).select('id');
- if(current.error)throw current.error;
- const keep=new Set(rows.map(x=>String(x.id)));
- const stale=(current.data||[]).map(x=>String(x.id)).filter(id=>!keep.has(id));
- for(const id of stale){
-  const removed=await sb.from(table).delete().eq('id',id);
-  if(removed.error)throw removed.error;
- }
-}
-function pcCloudPanel(){
- return '<p class="muted">Keep PixelCart data in Supabase so the same catalogue and store information can be used across devices.</p>'+
- '<div class="notice">Your existing browser data is not deleted. Import it once from the device that has your current store data. Run both SQL setup files in Supabase first.</div>'+
- '<button style="width:100%" onclick="pcImportLocalData()">Import this device’s data to Supabase</button>'+
- '<button class="ghost" style="width:100%;margin-top:9px" onclick="pcRefreshCloud()">Refresh data from Supabase</button>'+
- '<p class="meta">Cloud import includes products, categories, historical orders, reviews, delivery fees, discounts and store appearance. Product images are uploaded to Supabase Storage.</p>';
-}
-async function pcRefreshCloud(){
- try{const loaded=await pcCloudLoad();toast(loaded?'Cloud data loaded.':'No cloud data found yet.');adminHome('cloud')}
- catch(e){toast('Cloud refresh failed: '+e.message)}
-}
-async function pcImportLocalData(){
- if(!pcRequireOwner())return;
- if(!confirm('Import this device’s current PixelCart data to Supabase? Matching cloud records will be updated.'))return;
- try{
-  toast('Importing PixelCart data…');
-  for(const p of db.products){
-   if(p.image?.startsWith('data:')){
-    const blob=await (await fetch(p.image)).blob();
-    const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');
-    const safeId=String(p.id).replace(/[^a-zA-Z0-9_-]/g,'_');
-    const path='products/'+safeId+'.'+ext;
-    const up=await pcInitSupabase().storage.from('pixelcart-product-media').upload(path,blob,{upsert:true,contentType:blob.type});
-    if(up.error)throw up.error;
-    p.image=pcInitSupabase().storage.from('pixelcart-product-media').getPublicUrl(path).data.publicUrl;
-   }
-  }
-  await pcCloudUpsert('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
-  await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
-  await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
-  // Import historical browser orders only when the order ID is not already in the cloud.
-  // This prevents a repeat import from clearing customer_id on orders placed after migration.
-  if(db.orders.length){
-   const historical=await pcInitSupabase().from('pixelcart_orders')
-    .upsert(db.orders.map(x=>({id:String(x.id),customer_id:null,data:x})),{onConflict:'id',ignoreDuplicates:true});
-   if(historical.error)throw historical.error;
-  }
-  await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
-  const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
-  if(settings.error)throw settings.error;
-  const marker=await pcInitSupabase().from('pixelcart_meta').upsert({id:'main',data:{initialized:true,initialized_at:new Date().toISOString()}});
-  if(marker.error)throw marker.error;
-  for(const d of db.discounts||[]){
-   if(!d.code||!d.percent)continue;
-   const ins=await pcInitSupabase().from('pixelcart_discounts').upsert(
-    {code:String(d.code).toUpperCase(),percent:Number(d.percent),active:true},
-    {onConflict:'code',ignoreDuplicates:true}
-   );
-   if(ins.error)throw ins.error;
-  }
-  pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');
-  await pcCloudLoad();
-  showModal('Cloud import complete','<p>Your store data has been copied to Supabase. The original local copy remains on this device as a backup.</p><button style="width:100%" onclick="adminHome(\'cloud\')">Back to cloud sync</button>');
- }catch(e){toast('Import stopped: '+(e.message||'Check SQL setup and permissions.'))}
-}
-// Send newly uploaded product images to Supabase Storage before saving the product.
-const pcFinishSaveProductLocal=window.finishSaveProduct;
-window.finishSaveProduct=async function(id,p){
- try{
-  if(typeof p.image==='string'&&p.image.startsWith('data:')){
-   const blob=await (await fetch(p.image)).blob();
-   const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');
-   const path='products/'+String(p.id)+'-'+Date.now()+'.'+ext;
-   const uploaded=await pcInitSupabase().storage.from('pixelcart-product-media').upload(path,blob,{upsert:false,contentType:blob.type});
-   if(uploaded.error)throw uploaded.error;
-   p.image=pcInitSupabase().storage.from('pixelcart-product-media').getPublicUrl(path).data.publicUrl;
-  }
-  pcFinishSaveProductLocal(id,p);
-  if(pcOwnerSession&&pcCloudReady){await pcCloudUpsert('pixelcart_products',[{id:String(p.id),data:p}]);}
-  toast('Product saved and image uploaded.');
- }catch(e){toast('Product was not saved because its cloud image upload failed: '+e.message)}
-};
-// Customer reviews are stored under the signed-in customer's Supabase identity.
-window.submitReview=async function(id){
- if(!pcCustomerSession)return toast('Sign in to submit a review.');
- const p=db.products.find(x=>x.id===id);
- const rating=Number(document.getElementById('revRating')?.value||5);
- const name=(document.getElementById('revName')?.value||pcCustomerSession.user.user_metadata?.full_name||'Customer').trim();
- const reviewText=(document.getElementById('revText')?.value||'').trim();
- if(!reviewText)return toast('Write a short review first.');
- try{
-  const review={id:'review-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),productId:id,productName:p?.name||'',name,rating,text:reviewText};
-  const {error}=await pcInitSupabase().from('pixelcart_reviews').insert({id:review.id,product_id:String(id),customer_id:pcCustomerSession.user.id,data:review});
-  if(error)throw error;
-  db.reviews.unshift(review);
-  recalcRatings();
-  closeModal();renderProducts();toast('Review submitted.');
- }catch(e){toast(e.message||'Could not submit your review.')}
-};
-
-const pcSaveSettingsOriginal=window.pcSaveSettings;
-// Before the first cloud import, keep local settings as a migration fallback.
-// Once Supabase is initialized, it is the source of truth for store appearance.
-window.pcSaveSettings=function(){
- if(!pcCloudReady){pcSaveSettingsOriginal();return;}
- pcApplySettings();
- if(!pcOwnerSession)return toast('Sign in as an owner to save store settings.');
- pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings})
-  .then(({error})=>{if(error)toast('Cloud settings save failed: '+error.message);else toast('Store settings saved to Supabase.')})
-  .catch(e=>toast('Cloud settings save failed: '+e.message));
-};
-const pcSaveLocal=window.save;
-// localStorage is only a migration fallback before cloud initialization.
-// After initialization, owner changes are written to Supabase rather than
-// persisting the main store data in this browser.
-window.save=function(){
- if(!pcCloudReady){pcSaveLocal();return;}
- if(!pcOwnerSession)return;
- clearTimeout(pcCloudSaveTimer);
- pcCloudSaveTimer=setTimeout(async()=>{
-  try{
-   await pcCloudReconcile('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
-   await pcCloudReconcile('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
-   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
-   await pcCloudReconcile('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
-   for(const order of db.orders){const updated=await pcInitSupabase().from('pixelcart_orders').update({data:order}).eq('id',String(order.id));if(updated.error)throw updated.error;}
-   const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});if(settings.error)throw settings.error;
-   toast('Changes saved to Supabase.');
-  }catch(e){toast('Cloud save failed: '+e.message)}
- },600);
-};
-const pcRouteBeforeCloud=window.pcRouteSession;
-window.pcRouteSession=async function(session){
- await pcRouteBeforeCloud(session);
- if(session?.user){try{await pcCloudLoad()}catch(e){toast('Cloud data could not load: '+e.message)}}
-};
-window.placeOrder=async function(){
- const name=(document.getElementById('coName')?.value||pcCustomerSession?.user?.user_metadata?.full_name||'').trim();
- const phone=(document.getElementById('coPhone')?.value||'').trim();
- const address=(document.getElementById('coAddress')?.value||'').trim();
- if(!name)return toast('Your full name is required for every order.');
- if(!phone||!address)return toast('Please complete phone number and delivery address.');
- const order={name,phone,address,country:document.getElementById('coCountry').value,city:document.getElementById('coCity').value.trim(),items:cart.map(x=>({...x}))};
- try{
-  const {data,error}=await pcInitSupabase().rpc('pixelcart_place_order',{p_order:order});
-  if(error)throw error;
-  cart=[];updateCartCount();closeModal();await pcCloudLoad();toast('Your order was placed successfully.');
- }catch(e){toast(e.message||'Could not place your order.')}
-};
-(async()=>{try{await pcCloudLoad()}catch(e){console.warn('PixelCart cloud data:',e.message)}})();
-</script>
+<style>
+html[dir="rtl"] body{direction:rtl}
+html[dir="rtl"] .nav,html[dir="rtl"] .nav-actions,html[dir="rtl"] .hero,html[dir="rtl"] .section-head,html[dir="rtl"] .filter-actions{direction:rtl}
+html[dir="rtl"] .search:before{left:auto;right:14px}
+html[dir="rtl"] .search input{padding-left:12px;padding-right:40px}
+html[dir="rtl"] .tree button{text-align:right}
+html[dir="rtl"] .sidebar,html[dir="rtl"] .panel,html[dir="rtl"] .modal,html[dir="rtl"] .product-info{text-align:right}
+html[dir="rtl"] .heart{right:auto;left:10px}
+html[dir="rtl"] .modal-head,html[dir="rtl"] .admin-item,html[dir="rtl"] .cart-line{direction:rtl}
+html[dir="rtl"] .footer{text-align:center}
+</style>
 
 </body>
 </html>
