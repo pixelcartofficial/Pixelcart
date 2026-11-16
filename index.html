@@ -743,18 +743,36 @@ window.submitReview=async function(id){
 };
 
 const pcSaveSettingsOriginal=window.pcSaveSettings;
-window.pcSaveSettings=function(){pcSaveSettingsOriginal();if(pcOwnerSession&&pcCloudReady){pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings}).then(({error})=>{if(error)toast('Cloud settings save failed: '+error.message)})}};
+// Before the first cloud import, keep local settings as a migration fallback.
+// Once Supabase is initialized, it is the source of truth for store appearance.
+window.pcSaveSettings=function(){
+ if(!pcCloudReady){pcSaveSettingsOriginal();return;}
+ pcApplySettings();
+ if(!pcOwnerSession)return toast('Sign in as an owner to save store settings.');
+ pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings})
+  .then(({error})=>{if(error)toast('Cloud settings save failed: '+error.message);else toast('Store settings saved to Supabase.')})
+  .catch(e=>toast('Cloud settings save failed: '+e.message));
+};
 const pcSaveLocal=window.save;
-window.save=function(){pcSaveLocal();if(pcOwnerSession&&pcCloudReady){clearTimeout(pcCloudSaveTimer);pcCloudSaveTimer=setTimeout(async()=>{
- try{
-  await pcCloudReconcile('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
-  await pcCloudReconcile('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
-  await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
-  await pcCloudReconcile('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
-  for(const order of db.orders){const updated=await pcInitSupabase().from('pixelcart_orders').update({data:order}).eq('id',String(order.id));if(updated.error)throw updated.error;}
-  const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});if(settings.error)throw settings.error;
- }catch(e){toast('Cloud save failed: '+e.message)}
- },600)}};
+// localStorage is only a migration fallback before cloud initialization.
+// After initialization, owner changes are written to Supabase rather than
+// persisting the main store data in this browser.
+window.save=function(){
+ if(!pcCloudReady){pcSaveLocal();return;}
+ if(!pcOwnerSession)return;
+ clearTimeout(pcCloudSaveTimer);
+ pcCloudSaveTimer=setTimeout(async()=>{
+  try{
+   await pcCloudReconcile('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
+   await pcCloudReconcile('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
+   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
+   await pcCloudReconcile('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
+   for(const order of db.orders){const updated=await pcInitSupabase().from('pixelcart_orders').update({data:order}).eq('id',String(order.id));if(updated.error)throw updated.error;}
+   const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});if(settings.error)throw settings.error;
+   toast('Changes saved to Supabase.');
+  }catch(e){toast('Cloud save failed: '+e.message)}
+ },600);
+};
 const pcRouteBeforeCloud=window.pcRouteSession;
 window.pcRouteSession=async function(session){
  await pcRouteBeforeCloud(session);
