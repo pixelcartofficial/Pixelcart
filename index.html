@@ -384,7 +384,7 @@ function pcSaveConfig(){
 function adminHome(tab='products'){
  if(!pcRequireOwner())return;
 
- const tabs=['products','categories','orders','reviews','delivery','discounts','store','connection'];
+ const tabs=['products','categories','orders','reviews','delivery','discounts','store','connection','cloud'];
 
  showModal('PixelCart owner dashboard',
  `<div class="pc-owner-status">Verified owner account</div>
@@ -395,7 +395,7 @@ function adminHome(tab='products'){
    <button class="secondary" onclick="pcToggleEditMode()">${pcEditMode?'Turn off':'Turn on'} website Edit Mode</button>
    <button class="ghost" onclick="pcLogout()">Sign out</button>
   </div>
-  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='connection'?pcConnectionForm():adminContent(tab)}</div>`);
+  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='connection'?pcConnectionForm():tab==='cloud'?pcCloudPanel():adminContent(tab)}</div>`);
 }
 
 function pcStoreSettingsForm(){
