@@ -696,7 +696,10 @@ async function pcImportLocalData(){
   if(marker.error)throw marker.error;
   for(const d of db.discounts||[]){
    if(!d.code||!d.percent)continue;
-   const ins=await pcInitSupabase().from('pixelcart_discounts').upsert({code:String(d.code).toUpperCase(),percent:Number(d.percent),active:true},{onConflict:'code'});
+   const ins=await pcInitSupabase().from('pixelcart_discounts').upsert(
+    {code:String(d.code).toUpperCase(),percent:Number(d.percent),active:true},
+    {onConflict:'code',ignoreDuplicates:true}
+   );
    if(ins.error)throw ins.error;
   }
   pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');
