@@ -479,5 +479,103 @@ pcApplySettings();
  }
 })();
 </script>
+
+<script>
+// PixelCart cloud connection + account-bound discount QR codes.
+// The publishable key is intended for browser use; database RLS remains essential.
+const PC_SUPABASE_URL='https://zzgmyxainwitaaajumnb.supabase.co';
+const PC_SUPABASE_PUBLISHABLE_KEY='sb_publishable_6VeVRy4Scgwh45TJNlG7fw_46SUh1tm';
+window.pcInitSupabase=function(){
+ if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');
+ if(!pcSupabase)pcSupabase=window.supabase.createClient(PC_SUPABASE_URL,PC_SUPABASE_PUBLISHABLE_KEY);
+ return pcSupabase;
+};
+
+const pcBaseRouteSession=window.pcRouteSession;
+window.pcRouteSession=async function(session){
+ await pcBaseRouteSession(session);
+ if(session?.user){
+  const token=new URLSearchParams(location.search).get('claim_discount');
+  if(token && pcCustomerSession){
+   try{
+    const {data,error}=await pcInitSupabase().rpc('pixelcart_claim_discount',{p_qr_token:token});
+    if(error)throw error;
+    const row=Array.isArray(data)?data[0]:data;
+    history.replaceState({},'',location.pathname);
+    toast(row?.saved?'Discount saved to your account!':'This discount is already in your account.');
+    await window.pcCustomerHome();
+   }catch(e){toast(e.message||'Could not save this discount.');}
+  }
+ }
+};
+
+window.pcCustomerHome=async function(){
+ if(!pcCustomerSession)return openAccount();
+ const sb=pcInitSupabase();
+ const {data,error}=await sb.from('pixelcart_customer_discounts')
+  .select('saved_at,pixelcart_discounts(id,code,percent,expires_at,active)')
+  .order('saved_at',{ascending:false});
+ const rows=error?[]:(data||[]);
+ const list=rows.filter(x=>x.pixelcart_discounts).map(x=>{
+  const d=x.pixelcart_discounts;
+  return '<div class="admin-item"><div><b>'+esc(d.code)+'</b><small>'+Number(d.percent)+'% off · '+(d.expires_at?'Expires '+esc(new Date(d.expires_at).toLocaleDateString()):'No expiry set')+'</small></div><span class="pill">'+(d.active?'Saved':'Inactive')+'</span></div>';
+ }).join('');
+ showModal('Your PixelCart account',
+  '<p>Welcome to PixelCart.</p><p class="muted">Signed in as <b>'+esc(pcCustomerSession.user.email||'Customer')+'</b></p>'+
+  '<h3>My Discounts</h3>'+(error?'<div class="notice">Could not load saved discounts. '+esc(error.message)+'</div>':list||'<div class="empty">No saved discounts yet. Scan a PixelCart discount QR code while signed in.</div>')+
+  '<button class="ghost" style="width:100%;margin-top:14px" onclick="pcLogout()">Sign out</button>');
+};
+
+window.createDiscount=async function(){
+ if(!pcRequireOwner())return;
+ const code=(document.getElementById('discCode')?.value||'').trim().toUpperCase();
+ const percent=Number(document.getElementById('discPercent')?.value);
+ if(!/^[A-Z0-9_-]{3,32}$/.test(code)||percent<1||percent>90)return toast('Use a 3–32 character code and 1–90%.');
+ try{
+  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
+   .insert({code,percent,active:true}).select('id,code,percent,qr_token,active').single();
+  if(error)throw error;
+  db.discounts.unshift({id:data.id,code:data.code,percent:data.percent,qr_token:data.qr_token,used:false});
+  toast('Discount created in Supabase.');
+  await window.adminHome('discounts');
+ }catch(e){toast(e.message||'Could not create discount.');}
+};
+
+window.showDiscount=async function(code){
+ if(!pcRequireOwner())return;
+ try{
+  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
+   .select('id,code,percent,qr_token,active,expires_at').eq('code',code).single();
+  if(error)throw error;
+  const claimUrl=location.origin+location.pathname+'?claim_discount='+encodeURIComponent(data.qr_token);
+  showModal('Discount QR code','<h2>'+esc(data.code)+'</h2><p>'+Number(data.percent)+'% off · '+(data.active?'Active':'Inactive')+'</p>'+
+   '<div class="notice">Customers must sign in before scanning. The discount is saved to their PixelCart account and is not automatically applied to an order.</div>'+
+   '<div id="qrArea" style="margin:15px auto;width:190px"></div><button class="ghost" style="width:100%" onclick="navigator.clipboard?.writeText('+JSON.stringify(claimUrl)+');toast(\'QR link copied\')">Copy QR link</button>');
+  if(window.QRCode)new QRCode(document.getElementById('qrArea'),{text:claimUrl,width:190,height:190});
+ }catch(e){toast(e.message||'Could not load discount QR.');}
+};
+
+const pcBaseAdminHome=window.adminHome;
+window.adminHome=async function(tab='products'){
+ pcBaseAdminHome(tab);
+ if(tab!=='discounts'||!pcOwnerSession)return;
+ try{
+  const {data,error}=await pcInitSupabase().from('pixelcart_discounts')
+   .select('id,code,percent,active,claim_count,expires_at').order('created_at',{ascending:false});
+  if(error)throw error;
+  const host=document.getElementById('adminContent');
+  if(!host)return;
+  host.innerHTML='<p class="muted">Create account-linked discount QR codes. Scans save the discount to a signed-in customer account.</p>'+
+   '<div class="form-grid"><div><label>Code</label><input id="discCode" placeholder="PIXEL10"></div><div><label>Discount percent</label><input id="discPercent" type="number" min="1" max="90" value="10"></div><div class="wide"><button onclick="createDiscount()">Create code</button></div></div>'+
+   '<div class="admin-list" style="margin-top:12px">'+(data||[]).map(d=>'<div class="admin-item"><div><b>'+esc(d.code)+' · '+Number(d.percent)+'% off</b><small>'+(d.active?'Active':'Inactive')+' · '+Number(d.claim_count||0)+' account saves</small></div><button class="secondary" onclick="showDiscount('+JSON.stringify(d.code)+')">Show QR</button></div>').join('')+'</div>';
+ }catch(e){toast(e.message||'Could not load cloud discounts.');}
+};
+
+// A QR scan while signed out is retained in the URL; after sign-in the claim is processed.
+if(new URLSearchParams(location.search).has('claim_discount')&&!pcCustomerSession&&!pcOwnerSession){
+ setTimeout(()=>pcShowAccount('login','Sign in or create an account to save this discount.'),0);
+}
+</script>
+
 </body>
 </html>
