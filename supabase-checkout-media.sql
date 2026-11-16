@@ -67,7 +67,7 @@ begin
   if v_country = '' then
     raise exception 'Choose a delivery country.';
   end if;
-  if jsonb_typeof(p_order->'items') <> 'array'
+  if jsonb_typeof(p_order->'items') is distinct from 'array'
      or jsonb_array_length(p_order->'items') < 1
      or jsonb_array_length(p_order->'items') > 50 then
     raise exception 'The cart is empty or contains too many items.';
