@@ -447,9 +447,15 @@ function pcSaveStoreForm(){
 function pcToggleEditMode(){
  if(!pcRequireOwner())return;
  pcEditMode=!pcEditMode;
- adminHome('products');
- pcAddInlineEditButtons();
- toast(pcEditMode?'Website Edit Mode is on.':'Website Edit Mode is off.');
+ closeModal();
+ if(pcEditMode){
+  renderProducts();
+  pcAddInlineEditButtons();
+  toast('Website Edit Mode is on. Select Edit product on a storefront card.');
+ }else{
+  document.querySelectorAll('.pc-inline-edit').forEach(button=>button.remove());
+  toast('Website Edit Mode is off.');
+ }
 }
 
 function pcAddInlineEditButtons(){
