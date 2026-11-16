@@ -672,7 +672,8 @@ async function pcImportLocalData(){
    if(p.image?.startsWith('data:')){
     const blob=await (await fetch(p.image)).blob();
     const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');
-    const path='products/'+String(p.id)+'-'+Date.now()+'.'+ext;
+    const safeId=String(p.id).replace(/[^a-zA-Z0-9_-]/g,'_');
+    const path='products/'+safeId+'.'+ext;
     const up=await pcInitSupabase().storage.from('pixelcart-product-media').upload(path,blob,{upsert:true,contentType:blob.type});
     if(up.error)throw up.error;
     p.image=pcInitSupabase().storage.from('pixelcart-product-media').getPublicUrl(path).data.publicUrl;
@@ -681,7 +682,13 @@ async function pcImportLocalData(){
   await pcCloudUpsert('pixelcart_categories',db.categories.map(x=>({id:String(x.id),data:x})));
   await pcCloudUpsert('pixelcart_products',db.products.map(x=>({id:String(x.id),data:x})));
   await pcCloudUpsert('pixelcart_reviews',db.reviews.map((x,i)=>({id:String(x.id||('review-'+i+'-'+x.productId)),product_id:String(x.productId||''),data:x})));
-  await pcCloudUpsert('pixelcart_orders',db.orders.map(x=>({id:String(x.id),customer_id:null,data:x})));
+  // Import historical browser orders only when the order ID is not already in the cloud.
+  // This prevents a repeat import from clearing customer_id on orders placed after migration.
+  if(db.orders.length){
+   const historical=await pcInitSupabase().from('pixelcart_orders')
+    .upsert(db.orders.map(x=>({id:String(x.id),customer_id:null,data:x})),{onConflict:'id',ignoreDuplicates:true});
+   if(historical.error)throw historical.error;
+  }
   await pcCloudUpsert('pixelcart_delivery_fees',Object.entries(db.fees).map(([country,fee])=>({country,fee:Number(fee)})));
   const settings=await pcInitSupabase().from('pixelcart_store_settings').upsert({id:'main',data:pcSettings});
   if(settings.error)throw settings.error;
