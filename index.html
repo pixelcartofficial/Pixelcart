@@ -18,6 +18,8 @@
 <div class="brand">Pixel<span>Cart</span></div>
 <div class="search"><input id="search" placeholder="Search products, colors, codes, SKUs…" oninput="renderProducts()"></div>
 <div class="nav-actions">
+<button class="ghost" id="languageToggle" type="button" onclick="pcToggleLanguage()" aria-label="Switch language">العربية</button>
+
 <button class="ghost" onclick="toggleTheme()" title="Switch theme">◐</button>
 <button class="ghost" onclick="openCart()">Cart <span id="cartCount">0</span></button>
 <button onclick="openAccount()">Account</button>
@@ -479,5 +481,78 @@ pcApplySettings();
  }
 })();
 </script>
+
+<script>
+// PixelCart bilingual storefront: English + Arabic.
+const PC_LANG_KEY='pixelcart_language_v1';
+let pcLanguage=localStorage.getItem(PC_LANG_KEY)==='ar'?'ar':'en';
+const pcTranslations={
+ 'PixelCart':'بيكسل كارت','Find your next favourite.':'اعثر على منتجاتك المفضلة.','Discover useful things, all in one place.':'اكتشف منتجات مفيدة، كلها في مكان واحد.',
+ 'Search products, colors, codes, SKUs…':'ابحث عن المنتجات والألوان والرموز…','Cart':'السلة','Account':'حسابي','Categories':'الفئات','Quick filters':'تصفية سريعة',
+ 'Availability':'التوفر','All products':'كل المنتجات','In stock':'متوفر','Sold out':'نفد المخزون','Minimum rating':'أقل تقييم','Any rating':'أي تقييم','Brand':'العلامة التجارية','All brands':'كل العلامات التجارية',
+ 'Min price (KWD)':'أقل سعر (د.ك)','Max price (KWD)':'أعلى سعر (د.ك)','No limit':'بلا حد','Color / option':'اللون / الخيار','e.g. Navy, 128GB':'مثال: كحلي، 128GB',
+ 'Sort by':'ترتيب حسب','Newest':'الأحدث','Price: low to high':'السعر: من الأقل إلى الأعلى','Price: high to low':'السعر: من الأعلى إلى الأقل','Best rated':'الأعلى تقييماً','Name A–Z':'الاسم من أ إلى ي',
+ 'Clear all filters':'مسح كل عوامل التصفية','No products match those filters. Try clearing some filters.':'لا توجد منتجات تطابق عوامل التصفية. جرّب مسح بعضها.',
+ 'Prices shown in KWD':'الأسعار بالدينار الكويتي','Cash on Delivery demo':'الدفع عند الاستلام (نسخة تجريبية)',
+ 'Details':'التفاصيل','Add to cart':'أضف إلى السلة','SOLD OUT':'نفد المخزون','No reviews':'لا توجد تقييمات','in stock':'متوفر في المخزون',
+ 'Your cart':'سلة التسوق','Your cart is empty.':'سلة التسوق فارغة.','Continue to Cash on Delivery':'متابعة للدفع عند الاستلام','Subtotal:':'المجموع الفرعي:',
+ 'Close':'إغلاق','Panel':'لوحة','Your PixelCart account':'حسابك في بيكسل كارت','Sign in to PixelCart':'تسجيل الدخول إلى بيكسل كارت','Create your account':'إنشاء حسابك',
+ 'Email address':'البريد الإلكتروني','Password':'كلمة المرور','Sign in':'تسجيل الدخول','Create a customer account':'إنشاء حساب عميل','Already have an account? Sign in':'لديك حساب بالفعل؟ سجّل الدخول',
+ 'Your name':'اسمك','Rating':'التقييم','Your review':'مراجعتك','Submit review':'إرسال المراجعة','Write a review':'اكتب مراجعة',
+ 'Choose an option':'اختر خياراً','Product number:':'رقم المنتج:','Watch product video ↗':'شاهد فيديو المنتج ↗','Available':'متاح','Delivery':'التوصيل','Discounts':'الخصومات','Orders':'الطلبات','Reviews':'المراجعات',
+ 'Products':'المنتجات','Store design':'تصميم المتجر','Connection':'الاتصال','Verified owner account':'تم التحقق من حساب المالك',
+ 'Owner signed in.':'تم تسجيل دخول المالك.','Signed out':'تم تسجيل الخروج','You have signed out of PixelCart.':'لقد سجلت الخروج من بيكسل كارت.',
+ 'Store settings saved on this device.':'تم حفظ إعدادات المتجر على هذا الجهاز.','Store settings':'إعدادات المتجر','Store name':'اسم المتجر','Support email':'بريد الدعم',
+ 'Homepage headline':'العنوان الرئيسي للصفحة','Homepage description':'وصف الصفحة الرئيسية','Accent colour':'اللون الأساسي','Hero background — first colour':'لون خلفية الواجهة الأول','Hero background — second colour':'لون خلفية الواجهة الثاني',
+ 'Currency label':'العملة','Save store changes':'حفظ تغييرات المتجر','Save product':'حفظ المنتج','Add product':'إضافة منتج','Edit product':'تعديل المنتج',
+ 'Product name':'اسم المنتج','Description':'الوصف','Price KWD':'السعر بالدينار الكويتي','Stock':'المخزون','Image URL':'رابط الصورة','Brand name':'اسم العلامة التجارية',
+ 'Supabase connection':'اتصال Supabase','Supabase Project URL':'رابط مشروع Supabase','Supabase publishable / anon key':'مفتاح Supabase العام','Save Supabase connection':'حفظ اتصال Supabase',
+ 'All':'الكل','Search':'بحث','Clear':'مسح','Cancel':'إلغاء','Save':'حفظ','Delete':'حذف','Edit':'تعديل','Back':'رجوع','Continue':'متابعة','Apply':'تطبيق',
+ 'Customer access':'صلاحية العميل','Owner dashboard':'لوحة تحكم المالك','Delivery estimates saved.':'تم حفظ تقديرات التوصيل.','Order status updated.':'تم تحديث حالة الطلب.',
+ 'This product is sold out.':'هذا المنتج نفد من المخزون.','Added to cart.':'تمت الإضافة إلى السلة.','Not enough stock.':'الكمية المطلوبة غير متوفرة.','Choose a variant first.':'اختر أحد الخيارات أولاً.',
+ 'Enter your email and password.':'أدخل بريدك الإلكتروني وكلمة المرور.','Write a short review first.':'اكتب مراجعة قصيرة أولاً.','Product name is required.':'اسم المنتج مطلوب.',
+ 'Kuwait':'الكويت','Saudi Arabia':'السعودية','United Arab Emirates':'الإمارات العربية المتحدة','Qatar':'قطر','Bahrain':'البحرين','Oman':'عُمان'
+};
+const pcReverseTranslations=Object.fromEntries(Object.entries(pcTranslations).map(([en,ar])=>[ar,en]));
+function pcTranslateText(value){
+ const raw=value,trimmed=raw.trim();if(!trimmed)return raw;
+ let translated=pcLanguage==='ar'?(pcTranslations[trimmed]||trimmed):(pcReverseTranslations[trimmed]||trimmed);
+ if(pcLanguage==='ar')translated=translated.replace(/^(\d+) products? found$/,function(_,n){return 'تم العثور على '+n+' منتج';});
+ else translated=translated.replace(/^تم العثور على (\d+) منتج$/,'$1 products found');
+ return raw.replace(trimmed,translated);
+}
+function pcTranslateElement(root){
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+ while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(function(n){if(n.parentElement&&!['SCRIPT','STYLE','TEXTAREA'].includes(n.parentElement.tagName))n.nodeValue=pcTranslateText(n.nodeValue)});
+ if(root.querySelectorAll)root.querySelectorAll('input[placeholder],textarea[placeholder],button[title],option').forEach(function(el){
+  ['placeholder','title'].forEach(function(a){if(el.hasAttribute(a))el.setAttribute(a,pcTranslateText(el.getAttribute(a)))});
+  if(el.tagName==='OPTION')el.textContent=pcTranslateText(el.textContent);
+ });
+}
+function pcApplyLanguage(){
+ const ar=pcLanguage==='ar';document.documentElement.lang=ar?'ar':'en';document.documentElement.dir=ar?'rtl':'ltr';
+ document.body.classList.toggle('pc-arabic',ar);
+ const b=document.getElementById('languageToggle');
+ if(b){b.textContent=ar?'English':'العربية';b.setAttribute('aria-label',ar?'Switch to English':'التبديل إلى الإنجليزية');}
+ pcTranslateElement(document.body);
+}
+function pcToggleLanguage(){pcLanguage=pcLanguage==='en'?'ar':'en';localStorage.setItem(PC_LANG_KEY,pcLanguage);pcApplyLanguage();}
+const pcLangObserver=new MutationObserver(function(records){records.forEach(function(r){r.addedNodes.forEach(function(n){if(n.nodeType===Node.ELEMENT_NODE)pcTranslateElement(n);else if(n.nodeType===Node.TEXT_NODE)n.nodeValue=pcTranslateText(n.nodeValue)})})});
+pcLangObserver.observe(document.body,{childList:true,subtree:true});
+pcApplyLanguage();
+</script>
+<style>
+html[dir="rtl"] body{direction:rtl}
+html[dir="rtl"] .nav,html[dir="rtl"] .nav-actions,html[dir="rtl"] .hero,html[dir="rtl"] .section-head,html[dir="rtl"] .filter-actions{direction:rtl}
+html[dir="rtl"] .search:before{left:auto;right:14px}
+html[dir="rtl"] .search input{padding-left:12px;padding-right:40px}
+html[dir="rtl"] .tree button{text-align:right}
+html[dir="rtl"] .sidebar,html[dir="rtl"] .panel,html[dir="rtl"] .modal,html[dir="rtl"] .product-info{text-align:right}
+html[dir="rtl"] .heart{right:auto;left:10px}
+html[dir="rtl"] .modal-head,html[dir="rtl"] .admin-item,html[dir="rtl"] .cart-line{direction:rtl}
+html[dir="rtl"] .footer{text-align:center}
+</style>
+
 </body>
 </html>
