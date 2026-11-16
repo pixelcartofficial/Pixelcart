@@ -618,7 +618,8 @@ async function pcCloudLoad(){
  if(pcOwnerSession){
   const o=await sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false});
   if(o.error)throw o.error;
-  db.orders=(o.data||[]).map(x=>x.data);loaded=true
+  db.orders=(o.data||[]).map(x=>x.data);
+  if(o.data?.length)loaded=true;
  }
  if(loaded){pcCloudReady=true;localStorage.setItem('pixelcart_cloud_ready','1');save();renderTree();renderProducts()}
  return loaded;
@@ -699,7 +700,7 @@ window.finishSaveProduct=async function(id,p){
   pcFinishSaveProductLocal(id,p);
   if(pcOwnerSession&&pcCloudReady){await pcCloudUpsert('pixelcart_products',[{id:String(p.id),data:p}]);}
   toast('Product saved and image uploaded.');
- }catch(e){toast('Product saved locally, but cloud upload failed: '+e.message)}
+ }catch(e){toast('Product was not saved because its cloud image upload failed: '+e.message)}
 };
 // Customer reviews are stored under the signed-in customer's Supabase identity.
 window.submitReview=async function(id){
