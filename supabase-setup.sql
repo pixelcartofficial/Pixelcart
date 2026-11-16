@@ -90,6 +90,9 @@ alter table public.pixelcart_meta enable row level security;
 alter table public.pixelcart_discounts enable row level security;
 alter table public.pixelcart_customer_discounts enable row level security;
 
+grant select on public.pixelcart_meta to anon, authenticated;
+grant insert, update, delete on public.pixelcart_meta to authenticated;
+
 -- Public storefront reads.
 drop policy if exists "PixelCart categories public read" on public.pixelcart_categories;
 create policy "PixelCart categories public read" on public.pixelcart_categories
