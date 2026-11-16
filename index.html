@@ -1,83 +1,483 @@
+
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelCart — Store</title>
+<meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PixelCart — Store</title>
 <style>
 :root{--bg:#f5f6fa;--panel:#fff;--ink:#171923;--muted:#747989;--line:#e6e8ef;--accent:#6558e8;--accent2:#eeeaff;--good:#16865b;--bad:#c64b54;--shadow:0 12px 35px #18204412}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,Segoe UI,Arial,sans-serif}body.dark{--bg:#11131a;--panel:#1b1e28;--ink:#f2f3f8;--muted:#a2a7b6;--line:#303442;--accent:#a69cff;--accent2:#302c4e;--shadow:0 12px 35px #0004}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:11px;padding:10px 14px;background:var(--accent);color:white;font-weight:650}button.secondary{background:var(--accent2);color:var(--accent)}button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}button.danger{background:#ffe9eb;color:#a52e3a}button:disabled{opacity:.45;cursor:not-allowed}input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);outline-color:var(--accent)}label{font-size:13px;color:var(--muted);display:block;margin:10px 0 5px}.wrap{max-width:1200px;margin:auto;padding:0 22px}.top{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}.nav{height:70px;display:flex;align-items:center;gap:18px}.brand{font-size:23px;font-weight:900;letter-spacing:-1px;color:var(--ink);white-space:nowrap}.brand span{color:var(--accent)}.search{flex:1;max-width:540px;position:relative}.search input{padding-left:40px}.search:before{content:'⌕';position:absolute;left:14px;top:5px;font-size:25px;color:var(--muted)}.nav-actions{margin-left:auto;display:flex;gap:8px}.hero{margin:26px 0 20px;padding:32px;border-radius:22px;background:linear-gradient(120deg,#29234f,#6257d9);color:white;display:flex;align-items:center;justify-content:space-between;gap:20px}.hero h1{font-size:clamp(28px,4vw,42px);line-height:1.1;margin:0 0 10px}.hero p{margin:0;color:#e4e1ff}.hero .hero-tag{font-size:64px;opacity:.9}.layout{display:grid;grid-template-columns:245px 1fr;gap:22px;margin-bottom:50px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.sidebar h3,.section-head h2{margin:0 0 12px}.tree button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);padding:8px 9px;font-weight:500;border-radius:8px}.tree button.active,.tree button:hover{background:var(--accent2);color:var(--accent)}.tree .child{padding-left:18px}.filters{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-bottom:15px}.filter-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 16px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px}.muted{color:var(--muted)}.count{font-size:13px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.product{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;position:relative}.photo{height:180px;background:var(--accent2);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--muted);font-size:42px}.photo img{width:100%;height:100%;object-fit:cover}.product-info{padding:13px}.product h3{font-size:16px;margin:0 0 4px}.price{font-weight:800;font-size:18px}.meta{font-size:12px;color:var(--muted);margin:4px 0}.sold{color:var(--bad);font-weight:700}.product-actions{display:flex;gap:7px;margin-top:10px}.product-actions button{flex:1;padding:9px 8px;font-size:13px}.heart{position:absolute;right:10px;top:10px;background:#fff;color:#555;border-radius:50%;width:36px;height:36px;padding:0;font-size:18px}.empty{padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px;grid-column:1/-1}.modal-bg{position:fixed;inset:0;background:#080a12a8;display:none;align-items:center;justify-content:center;padding:16px;z-index:30}.modal-bg.show{display:flex}.modal{background:var(--panel);color:var(--ink);border-radius:18px;padding:22px;width:min(720px,100%);max-height:90vh;overflow:auto;box-shadow:var(--shadow)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.modal-head h2{margin:0}.close{background:transparent;color:var(--muted);font-size:24px;padding:0 8px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.tabs button{background:var(--accent2);color:var(--accent)}.tabs button.active{background:var(--accent);color:white}.admin-list{display:grid;gap:9px}.admin-item{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}.admin-item small{display:block;color:var(--muted)}.variant-line{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:7px;margin:7px 0}.cart-line{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.pill{display:inline-block;border-radius:20px;background:var(--accent2);color:var(--accent);padding:3px 8px;font-size:11px}.footer{padding:25px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}.notice{background:#fff6df;color:#735a19;border:1px solid #f0dfaa;padding:12px;border-radius:11px;font-size:13px;margin:12px 0}.dark .notice{background:#3b321b;color:#f2d991;border-color:#665529}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#202333;color:#fff;padding:11px 17px;border-radius:30px;z-index:50;display:none}.stars{color:#e2a52b}.hidden{display:none!important}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{order:2}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .hero-tag{display:none}}@media(max-width:560px){.wrap{padding:0 13px}.nav{height:auto;min-height:65px;flex-wrap:wrap;padding:10px 0}.search{order:3;flex-basis:100%;max-width:none}.nav-actions button{padding:8px}.hero{padding:24px}.grid{grid-template-columns:1fr 1fr;gap:9px}.photo{height:130px}.product-info{padding:10px}.product h3{font-size:14px}.price{font-size:16px}.product-actions{flex-direction:column}.filters{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}.variant-line{grid-template-columns:1fr 1fr}.variant-line button{grid-column:1/-1}.cart-line{grid-template-columns:1fr auto}.cart-line .line-total{grid-column:1/-1}}
-
 .pc-owner-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.pc-edit-chip{background:#fff;color:#6558e8;border:1px solid #d9d4ff;font-size:12px;padding:7px 10px}.pc-config{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}.pc-config small{color:var(--muted)}.pc-owner-status{font-size:12px;color:var(--good);font-weight:700}
-</style></head>
-<body><header class="top"><div class="wrap nav"><div class="brand">Pixel<span>Cart</span></div><div class="search"><input id="search" placeholder="Search products, colors, codes, SKUs…" oninput="renderProducts()"></div><div class="nav-actions"><button class="ghost" onclick="toggleTheme()" title="Switch theme">◐</button><button class="ghost" onclick="openCart()">Cart <span id="cartCount">0</span></button><button onclick="openAdmin()">Owner</button></div></div></header>
-<main class="wrap"><section class="hero"><div><h1>Find your next favourite.</h1><p>Discover useful things, all in one place.</p></div><div class="hero-tag">✦</div></section>
-<div class="layout"><aside class="panel sidebar"><h3>Categories</h3><div id="categoryTree" class="tree"></div><hr style="border:0;border-top:1px solid var(--line);margin:15px 0"><h3>Quick filters</h3><label>Availability</label><select id="stockFilter" onchange="renderProducts()"><option value="all">All products</option><option value="in">In stock</option><option value="out">Sold out</option></select><label>Minimum rating</label><select id="ratingFilter" onchange="renderProducts()"><option value="0">Any rating</option><option value="3">3+ stars</option><option value="4">4+ stars</option><option value="5">5 stars</option></select><label>Brand</label><select id="brandFilter" onchange="renderProducts()"><option value="">All brands</option></select></aside>
-<section><div class="filters"><div><label>Min price (KWD)</label><input id="minPrice" type="number" min="0" step="0.001" placeholder="0" oninput="renderProducts()"></div><div><label>Max price (KWD)</label><input id="maxPrice" type="number" min="0" step="0.001" placeholder="No limit" oninput="renderProducts()"></div><div><label>Color / option</label><input id="colorFilter" placeholder="e.g. Navy, 128GB" oninput="renderProducts()"></div><div><label>Sort by</label><select id="sortBy" onchange="renderProducts()"><option value="new">Newest</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="rating">Best rated</option><option value="name">Name A–Z</option></select></div></div><div class="filter-actions"><span class="count" id="resultCount">0 products</span><button class="ghost" onclick="clearFilters()">Clear all filters</button></div><div class="grid" id="products"></div></section></div></main><footer class="footer">PixelCart · Prices shown in KWD · Cash on Delivery demo</footer>
-<div id="modalBg" class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modal-head"><h2 id="modalTitle">Panel</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div><div class="toast" id="toast"></div>
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap nav">
+<div class="brand">Pixel<span>Cart</span></div>
+<div class="search"><input id="search" placeholder="Search products, colors, codes, SKUs…" oninput="renderProducts()"></div>
+<div class="nav-actions">
+<button class="ghost" onclick="toggleTheme()" title="Switch theme">◐</button>
+<button class="ghost" onclick="openCart()">Cart <span id="cartCount">0</span></button>
+<button onclick="openAccount()">Account</button>
+</div></div></header>
+<main class="wrap">
+<section class="hero"><div><h1>Find your next favourite.</h1><p>Discover useful things, all in one place.</p></div><div class="hero-tag">✦</div></section>
+<div class="layout">
+<aside class="panel sidebar"><h3>Categories</h3><div id="categoryTree" class="tree"></div><hr style="border:0;border-top:1px solid var(--line);margin:15px 0"><h3>Quick filters</h3><label>Availability</label><select id="stockFilter" onchange="renderProducts()"><option value="all">All products</option><option value="in">In stock</option><option value="out">Sold out</option></select><label>Minimum rating</label><select id="ratingFilter" onchange="renderProducts()"><option value="0">Any rating</option><option value="3">3+ stars</option><option value="4">4+ stars</option><option value="5">5 stars</option></select><label>Brand</label><select id="brandFilter" onchange="renderProducts()"><option value="">All brands</option></select></aside>
+<section>
+<div class="filters">
+<div><label>Min price (KWD)</label><input id="minPrice" type="number" min="0" step="0.001" placeholder="0" oninput="renderProducts()"></div>
+<div><label>Max price (KWD)</label><input id="maxPrice" type="number" min="0" step="0.001" placeholder="No limit" oninput="renderProducts()"></div>
+<div><label>Color / option</label><input id="colorFilter" placeholder="e.g. Navy, 128GB" oninput="renderProducts()"></div>
+<div><label>Sort by</label><select id="sortBy" onchange="renderProducts()"><option value="new">Newest</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="rating">Best rated</option><option value="name">Name A–Z</option></select></div>
+</div>
+<div class="filter-actions"><span class="count" id="resultCount">0 products</span><button class="ghost" onclick="clearFilters()">Clear all filters</button></div>
+<div class="grid" id="products"></div>
+</section></div></main>
+<footer class="footer">PixelCart · Prices shown in KWD · Cash on Delivery demo</footer>
+<div id="modalBg" class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modal-head"><h2 id="modalTitle">Panel</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
+<div class="toast" id="toast"></div>
 <script>
 const KEY='pixelcart_v7_data';
 const seed={categories:[{id:'c1',name:'Electronics',parentId:null},{id:'c2',name:'Phones',parentId:'c1'},{id:'c3',name:'Computers',parentId:'c1'},{id:'c4',name:'Home',parentId:null},{id:'c5',name:'Accessories',parentId:null}],products:[{id:'p1',number:'PC-0001',name:'Wireless Headphones',brand:'PixelSound',description:'Comfortable everyday wireless headphones.',price:8.5,stock:8,categoryId:'c1',image:'',video:'',rating:4.5,reviews:2,options:[{name:'Color',value:'Black',code:'BLK',sku:'PC-0001-BLK',price:8.5,stock:5},{name:'Color',value:'White',code:'WHT',sku:'PC-0001-WHT',price:8.5,stock:3}],created:Date.now()-3000},{id:'p2',number:'PC-0002',name:'Desk Lamp',brand:'Luma',description:'Simple lamp for a desk or bedside table.',price:4.25,stock:5,categoryId:'c4',image:'',video:'',rating:4,reviews:1,options:[{name:'Color',value:'White',code:'WHT',sku:'PC-0002-WHT',price:4.25,stock:5}],created:Date.now()-2000},{id:'p3',number:'PC-0003',name:'Travel Bottle',brand:'Everyday',description:'Reusable bottle for everyday use.',price:2,stock:12,categoryId:'c5',image:'',video:'',rating:5,reviews:3,options:[],created:Date.now()-1000},{id:'p4',number:'PC-0004',name:'Phone Stand',brand:'Everyday',description:'Adjustable phone stand.',price:1.75,stock:0,categoryId:'c5',image:'',video:'',rating:0,reviews:0,options:[],created:Date.now()}],orders:[],reviews:[],discounts:[],fees:{Kuwait:1.5,SaudiArabia:3.5,UAE:3.5,Qatar:3.5,Bahrain:2.5,Oman:3.5},nextNumber:5};
 let db=load(),cart=[],favourites=new Set(),selectedCategory='all',recent=[];
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(seed)}catch(e){return structuredClone(seed)}}function save(){localStorage.setItem(KEY,JSON.stringify(db))}function money(n){return Number(n||0).toFixed(3)+' KWD'}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}function toggleTheme(){document.body.classList.toggle('dark');localStorage.setItem('pixelcart_theme',document.body.classList.contains('dark')?'dark':'light')}if(localStorage.getItem('pixelcart_theme')==='dark')document.body.classList.add('dark');
-function descendants(id){let out=[id],kids=db.categories.filter(c=>c.parentId===id);kids.forEach(k=>out.push(...descendants(k.id)));return out}function categoryName(id){return db.categories.find(c=>c.id===id)?.name||'Uncategorised'}function renderTree(){let host=document.getElementById('categoryTree');host.innerHTML=`<button class="${selectedCategory==='all'?'active':''}" onclick="chooseCategory('all')">All products</button>`+db.categories.filter(c=>!c.parentId).map(c=>treeNode(c,0)).join('')}function treeNode(c,level){return `<button class="${selectedCategory===c.id?'active':''}" style="padding-left:${9+level*15}px" onclick="chooseCategory('${c.id}')">${level?'↳ ':''}${esc(c.name)}</button>`+db.categories.filter(x=>x.parentId===c.id).map(x=>treeNode(x,level+1)).join('')}function chooseCategory(id){selectedCategory=id;renderTree();renderProducts()}
-function renderProducts(){let q=document.getElementById('search').value.toLowerCase(),min=Number(document.getElementById('minPrice').value||0),max=document.getElementById('maxPrice').value===''?Infinity:Number(document.getElementById('maxPrice').value),col=document.getElementById('colorFilter').value.toLowerCase(),stock=document.getElementById('stockFilter').value,rating=Number(document.getElementById('ratingFilter').value),brand=document.getElementById('brandFilter').value;let list=db.products.filter(p=>{let opts=(p.options||[]).map(o=>[o.name,o.value,o.code,o.sku].join(' ')).join(' '),hay=[p.name,p.brand,p.number,p.description,p.id,opts,categoryName(p.categoryId)].join(' ').toLowerCase();let cat=selectedCategory==='all'||descendants(selectedCategory).includes(p.categoryId);return cat&&hay.includes(q)&&Number(p.price)>=min&&Number(p.price)<=max&&(!col||opts.toLowerCase().includes(col))&&(!brand||p.brand===brand)&&(stock==='all'||(stock==='in'?p.stock>0:p.stock<=0))&&p.rating>=rating});let sort=document.getElementById('sortBy').value;list.sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:sort==='rating'?b.rating-a.rating:sort==='name'?a.name.localeCompare(b.name):b.created-a.created);document.getElementById('resultCount').textContent=`${list.length} product${list.length===1?'':'s'} found`;document.getElementById('products').innerHTML=list.length?list.map(p=>`<article class="product"><button class="heart" onclick="toggleFav('${p.id}')">${favourites.has(p.id)?'♥':'♡'}</button><div class="photo">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:'✦'}</div><div class="product-info"><h3>${esc(p.name)}</h3><div class="meta">${esc(p.brand||'')} · ${esc(p.number)} · ${esc(categoryName(p.categoryId))}</div><div class="stars">${p.rating?'★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating)):'No reviews'} <span class="meta">(${p.reviews||0})</span></div><div class="price">${money(p.price)}</div><div class="meta">${p.stock>0?`${p.stock} in stock`:'<span class="sold">SOLD OUT</span>'}</div><div class="product-actions"><button class="secondary" onclick="viewProduct('${p.id}')">Details</button><button onclick="addToCart('${p.id}')" ${p.stock<=0?'disabled':''}>Add to cart</button></div></div></article>`).join(''):'<div class="empty">No products match those filters. Try clearing some filters.</div>';let brands=[...new Set(db.products.map(p=>p.brand).filter(Boolean))];let bf=document.getElementById('brandFilter'),v=bf.value;bf.innerHTML='<option value="">All brands</option>'+brands.map(b=>`<option>${esc(b)}</option>`).join('');bf.value=v}
-function clearFilters(){['search','minPrice','maxPrice','colorFilter'].forEach(id=>document.getElementById(id).value='');['stockFilter','ratingFilter','brandFilter','sortBy'].forEach(id=>document.getElementById(id).selectedIndex=0);selectedCategory='all';renderTree();renderProducts()}function toggleFav(id){favourites.has(id)?favourites.delete(id):favourites.add(id);renderProducts()}function addToCart(id,variantIndex=-1){let p=db.products.find(x=>x.id===id);if(!p||p.stock<1)return toast('This product is sold out.');if(p.options?.length&&variantIndex<0){viewProduct(id);toast('Choose a variant first.');return}let v=variantIndex>=0?p.options[variantIndex]:null;if(v&&v.stock<1)return toast('That option is sold out.');let key=id+'_'+(v?.sku||'base'),line=cart.find(x=>x.key===key);let available=v?v.stock:p.stock;if(line&&line.qty>=available)return toast('Not enough stock.');if(line)line.qty++;else cart.push({key,id,variantIndex,qty:1,price:v?Number(v.price):Number(p.price),label:v?`${v.name}: ${v.value}`:''});updateCartCount();toast('Added to cart.')}function updateCartCount(){document.getElementById('cartCount').textContent=cart.reduce((s,x)=>s+x.qty,0)}
-function showModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('modalBg').classList.add('show')}function closeModal(){document.getElementById('modalBg').classList.remove('show')}function viewProduct(id){let p=db.products.find(x=>x.id===id);recent=[id,...recent.filter(x=>x!==id)].slice(0,8);showModal(p.name,`<div class="form-grid"><div class="wide">${p.image?`<img src="${esc(p.image)}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px">`:'<div class="photo" style="border-radius:12px">✦</div>'}</div><div class="wide muted">${esc(p.description)}</div><div><b>${money(p.price)}</b><div class="meta">Product number: ${esc(p.number)}</div><div class="meta">Brand: ${esc(p.brand)}</div></div><div><div class="stars">${p.rating?'★'.repeat(Math.round(p.rating)):'No ratings'} (${p.reviews||0})</div><div class="meta">${p.stock} available</div></div>${p.options?.length?`<div class="wide"><label>Choose an option</label><select id="variantChoice">${p.options.map((o,i)=>`<option value="${i}">${esc(o.name)}: ${esc(o.value)} · ${money(o.price)} · ${o.stock} left</option>`).join('')}</select></div>`:''}${p.video?`<div class="wide"><a href="${esc(p.video)}" target="_blank">Watch product video ↗</a></div>`:''}<div class="wide"><button onclick="addToCart('${p.id}',${p.options?.length?'Number(document.getElementById(\'variantChoice\').value)':'-1'});closeModal()" ${p.stock<=0?'disabled':''}>Add to cart</button></div><div class="wide"><button class="ghost" onclick="writeReview('${p.id}')">Write a review</button></div></div>`)}
-function openCart(){let total=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Your cart',cart.length?cart.map((x,i)=>{let p=db.products.find(p=>p.id===x.id);return `<div class="cart-line"><div><b>${esc(p?.name||'Product')}</b><div class="meta">${esc(x.label)}</div>${money(x.price)} each</div><div class="row" style="min-width:110px"><button class="ghost" onclick="changeQty(${i},-1)">−</button><b>${x.qty}</b><button class="ghost" onclick="changeQty(${i},1)">+</button></div><div class="line-total"><b>${money(x.qty*x.price)}</b> <button class="danger" onclick="removeCart(${i})">×</button></div></div>`}).join('')+`<h3 style="text-align:right">Subtotal: ${money(total)}</h3><button style="width:100%" onclick="checkout()">Continue to Cash on Delivery</button>`:'<div class="empty">Your cart is empty.</div>')}function changeQty(i,d){let x=cart[i],p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null,max=v?v.stock:p.stock;if(d>0&&x.qty>=max)return toast('Stock limit reached.');x.qty+=d;if(x.qty<=0)cart.splice(i,1);openCart();updateCartCount()}function removeCart(i){cart.splice(i,1);openCart();updateCartCount()}
-function checkout(){if(!cart.length)return;let subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Cash on Delivery checkout',`<div class="notice">Demo checkout only. No courier booking or real payment is made.</div><div class="form-grid"><div><label>Full name</label><input id="coName" required></div><div><label>Phone number</label><input id="coPhone" required></div><div><label>Country</label><select id="coCountry" onchange="updateCheckoutFee()"><option>Kuwait</option><option>SaudiArabia</option><option>UAE</option><option>Qatar</option><option>Bahrain</option><option>Oman</option></select></div><div><label>City / area</label><input id="coCity"></div><div class="wide"><label>Full delivery address</label><textarea id="coAddress" rows="2"></textarea></div></div><p>Subtotal: <b>${money(subtotal)}</b></p><p>Demo delivery estimate: <b id="coFee">${money(db.fees.Kuwait)}</b></p><p>Total due on delivery: <b id="coTotal">${money(subtotal+Number(db.fees.Kuwait))}</b></p><button style="width:100%" onclick="placeOrder()">Place COD order</button>`)}function updateCheckoutFee(){let c=document.getElementById('coCountry').value,f=Number(db.fees[c]||0),s=cart.reduce((a,x)=>a+x.qty*x.price,0);document.getElementById('coFee').textContent=money(f);document.getElementById('coTotal').textContent=money(s+f)}function placeOrder(){let name=document.getElementById('coName').value.trim(),phone=document.getElementById('coPhone').value.trim(),address=document.getElementById('coAddress').value.trim();if(!name||!phone||!address)return toast('Please complete name, phone and address.');let country=document.getElementById('coCountry').value,subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0),fee=Number(db.fees[country]||0);cart.forEach(x=>{let p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null;if(v)v.stock-=x.qty;else p.stock-=x.qty;p.stock=p.options?.length?p.options.reduce((a,o)=>a+Number(o.stock),0):p.stock});db.orders.unshift({id:'ORD-'+Date.now().toString().slice(-7),name,phone,address,country,city:document.getElementById('coCity').value,items:cart.map(x=>({...x})),subtotal,fee,total:subtotal+fee,status:'New',date:new Date().toLocaleString()});save();cart=[];updateCartCount();closeModal();renderProducts();toast('Demo order saved on this device.')}
-function openAdmin(){showModal('Owner panel',`<div class="notice">This is a local demo panel, not a secure online owner login. Do not use a real password here.</div><label>Demo owner PIN</label><input id="adminPin" type="password" placeholder="Enter PIN"><button style="width:100%;margin-top:12px" onclick="unlockAdmin()">Open owner tools</button><p class="meta">Demo PIN: 1234</p>`)}function unlockAdmin(){if(document.getElementById('adminPin').value!=='1234')return toast('Incorrect demo PIN.');adminHome()}
-function adminHome(tab='products'){let tabs=['products','categories','orders','reviews','delivery','discounts'];showModal('Owner dashboard',`<div class="tabs">${tabs.map(t=>`<button class="${t===tab?'active':''}" onclick="adminHome('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div><div id="adminContent">${adminContent(tab)}</div>`)}function adminContent(tab){if(tab==='products')return `<button onclick="productForm()">+ Add product</button><div class="admin-list" style="margin-top:12px">${db.products.map(p=>`<div class="admin-item"><div><b>${esc(p.name)}</b><small>${esc(p.number)} · ${money(p.price)} · Stock ${p.stock}</small></div><div class="row"><button class="secondary" onclick="productForm('${p.id}')">Edit</button><button class="danger" onclick="deleteProduct('${p.id}')">Delete</button></div></div>`).join('')}</div>`;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(seed)}catch(e){return structuredClone(seed)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function money(n){return Number(n||0).toFixed(3)+' KWD'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function toggleTheme(){document.body.classList.toggle('dark');localStorage.setItem('pixelcart_theme',document.body.classList.contains('dark')?'dark':'light')}
+if(localStorage.getItem('pixelcart_theme')==='dark')document.body.classList.add('dark');
+function descendants(id){let out=[id],kids=db.categories.filter(c=>c.parentId===id);kids.forEach(k=>out.push(...descendants(k.id)));return out}
+function categoryName(id){return db.categories.find(c=>c.id===id)?.name||'Uncategorised'}
+function renderTree(){let host=document.getElementById('categoryTree');host.innerHTML=`<button class="${selectedCategory==='all'?'active':''}" onclick="chooseCategory('all')">All products</button>`+db.categories.filter(c=>!c.parentId).map(c=>treeNode(c,0)).join('')}
+function treeNode(c,level){return `<button class="${selectedCategory===c.id?'active':''}" style="padding-left:${9+level*15}px" onclick="chooseCategory('${c.id}')">${level?'↳ ':''}${esc(c.name)}</button>`+db.categories.filter(x=>x.parentId===c.id).map(x=>treeNode(x,level+1)).join('')}
+function chooseCategory(id){selectedCategory=id;renderTree();renderProducts()}
+function renderProducts(){
+let q=document.getElementById('search').value.toLowerCase(),min=Number(document.getElementById('minPrice').value||0),max=document.getElementById('maxPrice').value===''?Infinity:Number(document.getElementById('maxPrice').value),col=document.getElementById('colorFilter').value.toLowerCase(),stock=document.getElementById('stockFilter').value,rating=Number(document.getElementById('ratingFilter').value),brand=document.getElementById('brandFilter').value;
+let list=db.products.filter(p=>{let opts=(p.options||[]).map(o=>[o.name,o.value,o.code,o.sku].join(' ')).join(' '),hay=[p.name,p.brand,p.number,p.description,p.id,opts,categoryName(p.categoryId)].join(' ').toLowerCase();let cat=selectedCategory==='all'||descendants(selectedCategory).includes(p.categoryId);return cat&&hay.includes(q)&&Number(p.price)>=min&&Number(p.price)<=max&&(!col||opts.toLowerCase().includes(col))&&(!brand||p.brand===brand)&&(stock==='all'||(stock==='in'?p.stock>0:p.stock<=0))&&p.rating>=rating});
+let sort=document.getElementById('sortBy').value;
+list.sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:sort==='rating'?b.rating-a.rating:sort==='name'?a.name.localeCompare(b.name):b.created-a.created);
+document.getElementById('resultCount').textContent=`${list.length} product${list.length===1?'':'s'} found`;
+document.getElementById('products').innerHTML=list.length?list.map(p=>`<article class="product"><button class="heart" onclick="toggleFav('${p.id}')">${favourites.has(p.id)?'♥':'♡'}</button><div class="photo">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:'✦'}</div><div class="product-info"><h3>${esc(p.name)}</h3><div class="meta">${esc(p.brand||'')} · ${esc(p.number)} · ${esc(categoryName(p.categoryId))}</div><div class="stars">${p.rating?'★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating)):'No reviews'} <span class="meta">(${p.reviews||0})</span></div><div class="price">${money(p.price)}</div><div class="meta">${p.stock>0?`${p.stock} in stock`:'<span class="sold">SOLD OUT</span>'}</div><div class="product-actions"><button class="secondary" onclick="viewProduct('${p.id}')">Details</button><button onclick="addToCart('${p.id}')" ${p.stock<=0?'disabled':''}>Add to cart</button></div></div></article>`).join(''):'<div class="empty">No products match those filters. Try clearing some filters.</div>';
+let brands=[...new Set(db.products.map(p=>p.brand).filter(Boolean))];let bf=document.getElementById('brandFilter'),v=bf.value;bf.innerHTML='<option value="">All brands</option>'+brands.map(b=>`<option>${esc(b)}</option>`).join('');bf.value=v
+}
+function clearFilters(){['search','minPrice','maxPrice','colorFilter'].forEach(id=>document.getElementById(id).value='');['stockFilter','ratingFilter','brandFilter','sortBy'].forEach(id=>document.getElementById(id).selectedIndex=0);selectedCategory='all';renderTree();renderProducts()}
+function toggleFav(id){favourites.has(id)?favourites.delete(id):favourites.add(id);renderProducts()}
+function addToCart(id,variantIndex=-1){let p=db.products.find(x=>x.id===id);if(!p||p.stock<1)return toast('This product is sold out.');if(p.options?.length&&variantIndex<0){viewProduct(id);toast('Choose a variant first.');return}let v=variantIndex>=0?p.options[variantIndex]:null;if(v&&v.stock<1)return toast('That option is sold out.');let key=id+'_'+(v?.sku||'base'),line=cart.find(x=>x.key===key);let available=v?v.stock:p.stock;if(line&&line.qty>=available)return toast('Not enough stock.');if(line)line.qty++;else cart.push({key,id,variantIndex,qty:1,price:v?Number(v.price):Number(p.price),label:v?`${v.name}: ${v.value}`:''});updateCartCount();toast('Added to cart.')}
+function updateCartCount(){document.getElementById('cartCount').textContent=cart.reduce((s,x)=>s+x.qty,0)}
+function showModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('modalBg').classList.add('show')}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function viewProduct(id){let p=db.products.find(x=>x.id===id);recent=[id,...recent.filter(x=>x!==id)].slice(0,8);showModal(p.name,`<div class="form-grid"><div class="wide">${p.image?`<img src="${esc(p.image)}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px">`:'<div class="photo" style="border-radius:12px">✦</div>'}</div><div class="wide muted">${esc(p.description)}</div><div><b>${money(p.price)}</b><div class="meta">Product number: ${esc(p.number)}</div><div class="meta">Brand: ${esc(p.brand)}</div></div><div><div class="stars">${p.rating?'★'.repeat(Math.round(p.rating)):'No ratings'} (${p.reviews||0})</div><div class="meta">${p.stock} available</div></div>${p.options?.length?`<div class="wide"><label>Choose an option</label><select id="variantChoice">${p.options.map((o,i)=>`<option value="${i}">${esc(o.name)}: ${esc(o.value)} · ${money(o.price)} · ${o.stock} left</option>`).join('')}</select></div>`:''}${p.video?`<div class="wide"><a href="${esc(p.video)}" target="_blank">Watch product video ↗</a></div>`:''}<div class="wide"><button onclick="addToCart('${p.id}',${p.options?.length?'Number(document.getElementById(\'variantChoice\').value)':'-1'});closeModal()" ${p.stock<=0?'disabled':''}>Add to cart</button></div><div class="wide"><button class="ghost" onclick="writeReview('${p.id}')">Write a review</button></div></div>`)}
+function openCart(){let total=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Your cart',cart.length?cart.map((x,i)=>{let p=db.products.find(p=>p.id===x.id);return `<div class="cart-line"><div><b>${esc(p?.name||'Product')}</b><div class="meta">${esc(x.label)}</div>${money(x.price)} each</div><div class="row" style="min-width:110px"><button class="ghost" onclick="changeQty(${i},-1)">−</button><b>${x.qty}</b><button class="ghost" onclick="changeQty(${i},1)">+</button></div><div class="line-total"><b>${money(x.qty*x.price)}</b> <button class="danger" onclick="removeCart(${i})">×</button></div></div>`}).join('')+`<h3 style="text-align:right">Subtotal: ${money(total)}</h3><button style="width:100%" onclick="checkout()">Continue to Cash on Delivery</button>`:'<div class="empty">Your cart is empty.</div>')}
+function changeQty(i,d){let x=cart[i],p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null,max=v?v.stock:p.stock;if(d>0&&x.qty>=max)return toast('Stock limit reached.');x.qty+=d;if(x.qty<=0)cart.splice(i,1);openCart();updateCartCount()}
+function removeCart(i){cart.splice(i,1);openCart();updateCartCount()}
+function checkout(){if(!cart.length)return;let subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0);showModal('Cash on Delivery checkout',`<div class="notice">Demo checkout only. No courier booking or real payment is made.</div><div class="form-grid"><div><label>Full name</label><input id="coName" required></div><div><label>Phone number</label><input id="coPhone" required></div><div><label>Country</label><select id="coCountry" onchange="updateCheckoutFee()"><option>Kuwait</option><option>SaudiArabia</option><option>UAE</option><option>Qatar</option><option>Bahrain</option><option>Oman</option></select></div><div><label>City / area</label><input id="coCity"></div><div class="wide"><label>Full delivery address</label><textarea id="coAddress" rows="2"></textarea></div></div><p>Subtotal: <b>${money(subtotal)}</b></p><p>Demo delivery estimate: <b id="coFee">${money(db.fees.Kuwait)}</b></p><p>Total due on delivery: <b id="coTotal">${money(subtotal+Number(db.fees.Kuwait))}</b></p><button style="width:100%" onclick="placeOrder()">Place COD order</button>`)}
+function updateCheckoutFee(){let c=document.getElementById('coCountry').value,f=Number(db.fees[c]||0),s=cart.reduce((a,x)=>a+x.qty*x.price,0);document.getElementById('coFee').textContent=money(f);document.getElementById('coTotal').textContent=money(s+f)}
+function placeOrder(){let name=document.getElementById('coName').value.trim(),phone=document.getElementById('coPhone').value.trim(),address=document.getElementById('coAddress').value.trim();if(!name||!phone||!address)return toast('Please complete name, phone and address.');let country=document.getElementById('coCountry').value,subtotal=cart.reduce((s,x)=>s+x.qty*x.price,0),fee=Number(db.fees[country]||0);cart.forEach(x=>{let p=db.products.find(p=>p.id===x.id),v=x.variantIndex>=0?p.options[x.variantIndex]:null;if(v)v.stock-=x.qty;else p.stock-=x.qty;p.stock=p.options?.length?p.options.reduce((a,o)=>a+Number(o.stock),0):p.stock});db.orders.unshift({id:'ORD-'+Date.now().toString().slice(-7),name,phone,address,country,city:document.getElementById('coCity').value,items:cart.map(x=>({...x})),subtotal,fee,total:subtotal+fee,status:'New',date:new Date().toLocaleString()});save();cart=[];updateCartCount();closeModal();renderProducts();toast('Demo order saved on this device.')}
+
+function openAdmin(){openAccount()}
+function unlockAdmin(){openAccount()}
+function adminHome(tab='products'){let tabs=['products','categories','orders','reviews','delivery','discounts'];showModal('Owner dashboard',`<div class="tabs">${tabs.map(t=>`<button class="${t===tab?'active':''}" onclick="adminHome('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div><div id="adminContent">${adminContent(tab)}</div>`)}
+function adminContent(tab){
+if(tab==='products')return `<button onclick="productForm()">+ Add product</button><div class="admin-list" style="margin-top:12px">${db.products.map(p=>`<div class="admin-item"><div><b>${esc(p.name)}</b><small>${esc(p.number)} · ${money(p.price)} · Stock ${p.stock}</small></div><div class="row"><button class="secondary" onclick="productForm('${p.id}')">Edit</button><button class="danger" onclick="deleteProduct('${p.id}')">Delete</button></div></div>`).join('')}</div>`;
 if(tab==='categories')return `<div class="form-grid"><div><label>Category name</label><input id="newCatName" placeholder="e.g. Smart watches"></div><div><label>Parent category (optional)</label><select id="newCatParent"><option value="">Top level</option>${db.categories.map(c=>`<option value="${c.id}">${esc(categoryPath(c.id))}</option>`).join('')}</select></div><div class="wide"><button onclick="addCategory()">Create category</button></div></div><div class="admin-list" style="margin-top:14px">${db.categories.map(c=>`<div class="admin-item"><div><b>${esc(c.name)}</b><small>${c.parentId?categoryPath(c.parentId):'Top level'}</small></div><div class="row"><button class="secondary" onclick="renameCategory('${c.id}')">Rename</button><button class="danger" onclick="deleteCategory('${c.id}')">Delete</button></div></div>`).join('')}</div><p class="meta">Categories can be nested to any depth. Move a product by editing its category.</p>`;
 if(tab==='orders')return db.orders.length?`<div class="admin-list">${db.orders.map(o=>`<div class="admin-item"><div><b>${esc(o.id)} · ${esc(o.name)}</b><small>${esc(o.date)} · ${esc(o.country)} · ${money(o.total)} COD</small><small>${esc(o.phone)} · ${esc(o.address)}</small></div><select onchange="setOrderStatus('${o.id}',this.value)">${['New','Processing','Shipped','Delivered','Cancelled'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`).join('')}</div>`:'<div class="empty">No orders yet.</div>';
 if(tab==='reviews')return db.reviews.length?`<div class="admin-list">${db.reviews.map((r,i)=>`<div class="admin-item"><div><b>${esc(r.productName)} · ${'★'.repeat(r.rating)}</b><small>${esc(r.name)}: ${esc(r.text)}</small></div><button class="danger" onclick="deleteReview(${i})">Delete</button></div>`).join('')}</div>`:'<div class="empty">No reviews yet.</div>';
 if(tab==='delivery')return `<p class="muted">Set demo delivery estimates in KWD. Replace these with the courier's confirmed rates before launch.</p><div class="form-grid">${Object.keys(db.fees).map(c=>`<div><label>${c}</label><input id="fee_${c}" type="number" step="0.001" value="${db.fees[c]}"></div>`).join('')}</div><button style="margin-top:12px" onclick="saveFees()">Save delivery estimates</button>`;
-return `<p class="muted">Create a discount code. In this local demo, redemption is recorded only in this browser.</p><div class="form-grid"><div><label>Code</label><input id="discCode" placeholder="PIXEL10"></div><div><label>Discount percent</label><input id="discPercent" type="number" min="1" max="90" value="10"></div><div class="wide"><button onclick="createDiscount()">Create code</button></div></div><div class="admin-list" style="margin-top:12px">${db.discounts.map(d=>`<div class="admin-item"><div><b>${esc(d.code)} · ${d.percent}% off</b><small>${d.used?'Redeemed':'Available'}</small></div><button class="secondary" onclick="showDiscount('${d.code}')">Show QR</button></div>`).join('')}</div>`}
-function categoryPath(id){let c=db.categories.find(x=>x.id===id);if(!c)return '';return c.parentId?categoryPath(c.parentId)+' / '+c.name:c.name}function addCategory(){let name=document.getElementById('newCatName').value.trim();if(!name)return toast('Enter a category name.');db.categories.push({id:'cat'+Date.now(),name,parentId:document.getElementById('newCatParent').value||null});save();adminHome('categories');renderTree();toast('Category created.')}function renameCategory(id){let c=db.categories.find(x=>x.id===id),n=prompt('New category name:',c.name);if(n?.trim()){c.name=n.trim();save();adminHome('categories');renderTree();renderProducts()}}function deleteCategory(id){let kids=db.categories.filter(c=>c.parentId===id);let assigned=db.products.some(p=>p.categoryId===id);if(kids.length||assigned)return toast('Move its child categories and products first.');if(confirm('Delete this category?')){db.categories=db.categories.filter(c=>c.id!==id);save();adminHome('categories');renderTree();renderProducts()}}
-function productForm(id=''){let p=id?db.products.find(x=>x.id===id):{name:'',brand:'',description:'',price:0,stock:0,categoryId:'',image:'',video:'',options:[]};let options=p.options||[];showModal(id?'Edit product':'Add product',`<div class="form-grid"><div><label>Product name</label><input id="pName" value="${esc(p.name)}"></div><div><label>Brand</label><input id="pBrand" value="${esc(p.brand)}"></div><div><label>Price (KWD)</label><input id="pPrice" type="number" step="0.001" value="${p.price}"></div><div><label>Stock (used if no variants)</label><input id="pStock" type="number" value="${p.stock}"></div><div><label>Category</label><select id="pCategory"><option value="">Uncategorised</option>${db.categories.map(c=>`<option value="${c.id}" ${p.categoryId===c.id?'selected':''}>${esc(categoryPath(c.id))}</option>`).join('')}</select></div><div><label>Product image URL</label><input id="pImage" value="${esc(p.image)}" placeholder="https://…"></div><div class="wide"><label>Or upload one product image</label><input id="pFile" type="file" accept="image/*" multiple></div><div class="wide"><label>Product video URL (optional)</label><input id="pVideo" value="${esc(p.video)}" placeholder="https://…"></div><div class="wide"><label>Description</label><textarea id="pDesc" rows="3">${esc(p.description)}</textarea></div><div class="wide"><b>Product options / variants</b><p class="meta">Add option types such as Color, Size, Storage. Each variant can have its own code, SKU, price and stock.</p><div id="variantRows">${options.map(o=>variantRow(o)).join('')}</div><button class="secondary" onclick="addVariantRow()">+ Add variant</button></div><div class="wide"><button style="width:100%" onclick="saveProduct('${id}')">Save product</button></div></div>`)}function variantRow(o={}){return `<div class="variant-line"><input placeholder="Option (Color)" class="vName" value="${esc(o.name||'')}"><input placeholder="Value (Navy)" class="vValue" value="${esc(o.value||'')}"><input placeholder="Code" class="vCode" value="${esc(o.code||'')}"><input placeholder="SKU" class="vSku" value="${esc(o.sku||'')}"><button class="danger" onclick="this.parentElement.remove()">×</button><input placeholder="Price KWD" type="number" step="0.001" class="vPrice" value="${o.price??''}"><input placeholder="Stock" type="number" class="vStock" value="${o.stock??''}"></div>`}function addVariantRow(){document.getElementById('variantRows').insertAdjacentHTML('beforeend',variantRow())}function saveProduct(id){let name=document.getElementById('pName').value.trim();if(!name)return toast('Product name is required.');let options=[...document.querySelectorAll('.variant-line')].map(r=>({name:r.querySelector('.vName').value.trim(),value:r.querySelector('.vValue').value.trim(),code:r.querySelector('.vCode').value.trim(),sku:r.querySelector('.vSku').value.trim(),price:Number(r.querySelector('.vPrice').value||document.getElementById('pPrice').value||0),stock:Number(r.querySelector('.vStock').value||0)})).filter(o=>o.name&&o.value);let product=id?db.products.find(p=>p.id===id):{id:'p'+Date.now(),number:'PC-'+String(db.nextNumber++).padStart(4,'0'),created:Date.now(),rating:0,reviews:0};Object.assign(product,{name,brand:document.getElementById('pBrand').value.trim(),description:document.getElementById('pDesc').value,price:Number(document.getElementById('pPrice').value||0),stock:options.length?options.reduce((s,o)=>s+o.stock,0):Number(document.getElementById('pStock').value||0),categoryId:document.getElementById('pCategory').value,image:document.getElementById('pImage').value.trim(),video:document.getElementById('pVideo').value.trim(),options});let fileInput=document.getElementById('pFile');if(fileInput.files.length){let file=fileInput.files[0],reader=new FileReader();reader.onload=()=>{product.image=reader.result;finishSaveProduct(id,product)};reader.readAsDataURL(file)}else finishSaveProduct(id,product)}function finishSaveProduct(id,p){if(!id)db.products.unshift(p);save();closeModal();renderProducts();renderTree();toast('Product saved on this device.')}function deleteProduct(id){if(confirm('Delete this product?')){db.products=db.products.filter(p=>p.id!==id);save();adminHome('products');renderProducts()}}
-function writeReview(id){let p=db.products.find(p=>p.id===id);showModal('Review '+p.name,`<label>Your name</label><input id="revName"><label>Rating</label><select id="revRating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><label>Your review</label><textarea id="revText"></textarea><button style="width:100%;margin-top:12px" onclick="submitReview('${id}')">Submit review</button>`)}function submitReview(id){let p=db.products.find(p=>p.id===id),r=Number(document.getElementById('revRating').value),name=document.getElementById('revName').value.trim()||'Customer',text=document.getElementById('revText').value.trim();if(!text)return toast('Write a short review first.');db.reviews.unshift({productId:id,productName:p.name,name,rating:r,text});let related=db.reviews.filter(x=>x.productId===id);p.rating=related.reduce((s,x)=>s+x.rating,0)/related.length;p.reviews=related.length;save();closeModal();renderProducts();toast('Review submitted.')}function deleteReview(i){db.reviews.splice(i,1);recalcRatings();save();adminHome('reviews');renderProducts()}function recalcRatings(){db.products.forEach(p=>{let a=db.reviews.filter(r=>r.productId===p.id);p.reviews=a.length;p.rating=a.length?a.reduce((s,x)=>s+x.rating,0)/a.length:0})}function setOrderStatus(id,s){let o=db.orders.find(x=>x.id===id);if(o)o.status=s;save();toast('Order status updated.')}function saveFees(){Object.keys(db.fees).forEach(c=>db.fees[c]=Number(document.getElementById('fee_'+c).value||0));save();toast('Delivery estimates saved.')}function createDiscount(){let code=document.getElementById('discCode').value.trim().toUpperCase(),percent=Number(document.getElementById('discPercent').value);if(!code||percent<1||percent>90)return toast('Enter a code and 1–90%.');if(db.discounts.some(d=>d.code===code))return toast('That code already exists.');db.discounts.push({code,percent,used:false});save();adminHome('discounts')}function showDiscount(code){let d=db.discounts.find(x=>x.code===code);showModal('Discount code',`<h2>${esc(d.code)}</h2><p>${d.percent}% off · ${d.used?'Redeemed':'Available'}</p><div class="notice">QR code preview requires an internet connection. This code is only saved in this browser.</div><button onclick="navigator.clipboard?.writeText('${esc(d.code)}');toast('Code copied')">Copy discount code</button><div id="qrArea" style="margin:15px auto;width:180px"></div>`);if(window.QRCode)new QRCode(document.getElementById('qrArea'),{text:'PIXELCART:'+d.code,width:180,height:180})}
-function renderAll(){renderTree();renderProducts();updateCartCount()}renderAll();
-</script><script>
-// PixelCart V8 owner access and editable storefront layer.
+return `<p class="muted">Create a discount code. In this local demo, redemption is recorded only in this browser.</p><div class="form-grid"><div><label>Code</label><input id="discCode" placeholder="PIXEL10"></div><div><label>Discount percent</label><input id="discPercent" type="number" min="1" max="90" value="10"></div><div class="wide"><button onclick="createDiscount()">Create code</button></div></div><div class="admin-list" style="margin-top:12px">${db.discounts.map(d=>`<div class="admin-item"><div><b>${esc(d.code)} · ${d.percent}% off</b><small>${d.used?'Redeemed':'Available'}</small></div><button class="secondary" onclick="showDiscount('${d.code}')">Show QR</button></div>`).join('')}</div>`
+}
+function categoryPath(id){let c=db.categories.find(x=>x.id===id);if(!c)return '';return c.parentId?categoryPath(c.parentId)+' / '+c.name:c.name}
+function addCategory(){let name=document.getElementById('newCatName').value.trim();if(!name)return toast('Enter a category name.');db.categories.push({id:'cat'+Date.now(),name,parentId:document.getElementById('newCatParent').value||null});save();adminHome('categories');renderTree();toast('Category created.')}
+function renameCategory(id){let c=db.categories.find(x=>x.id===id),n=prompt('New category name:',c.name);if(n?.trim()){c.name=n.trim();save();adminHome('categories');renderTree();renderProducts()}}
+function deleteCategory(id){let kids=db.categories.filter(c=>c.parentId===id);let assigned=db.products.some(p=>p.categoryId===id);if(kids.length||assigned)return toast('Move its child categories and products first.');if(confirm('Delete this category?')){db.categories=db.categories.filter(c=>c.id!==id);save();adminHome('categories');renderTree();renderProducts()}}
+function productForm(id=''){let p=id?db.products.find(x=>x.id===id):{name:'',brand:'',description:'',price:0,stock:0,categoryId:'',image:'',video:'',options:[]};let options=p.options||[];showModal(id?'Edit product':'Add product',`<div class="form-grid"><div><label>Product name</label><input id="pName" value="${esc(p.name)}"></div><div><label>Brand</label><input id="pBrand" value="${esc(p.brand)}"></div><div><label>Price (KWD)</label><input id="pPrice" type="number" step="0.001" value="${p.price}"></div><div><label>Stock (used if no variants)</label><input id="pStock" type="number" value="${p.stock}"></div><div><label>Category</label><select id="pCategory"><option value="">Uncategorised</option>${db.categories.map(c=>`<option value="${c.id}" ${p.categoryId===c.id?'selected':''}>${esc(categoryPath(c.id))}</option>`).join('')}</select></div><div><label>Product image URL</label><input id="pImage" value="${esc(p.image)}" placeholder="https://…"></div><div class="wide"><label>Or upload one product image</label><input id="pFile" type="file" accept="image/*" multiple></div><div class="wide"><label>Product video URL (optional)</label><input id="pVideo" value="${esc(p.video)}" placeholder="https://…"></div><div class="wide"><label>Description</label><textarea id="pDesc" rows="3">${esc(p.description)}</textarea></div><div class="wide"><b>Product options / variants</b><p class="meta">Add option types such as Color, Size, Storage. Each variant can have its own code, SKU, price and stock.</p><div id="variantRows">${options.map(o=>variantRow(o)).join('')}</div><button class="secondary" onclick="addVariantRow()">+ Add variant</button></div><div class="wide"><button style="width:100%" onclick="saveProduct('${id}')">Save product</button></div></div>`)}
+function variantRow(o={}){return `<div class="variant-line"><input placeholder="Option (Color)" class="vName" value="${esc(o.name||'')}"><input placeholder="Value (Navy)" class="vValue" value="${esc(o.value||'')}"><input placeholder="Code" class="vCode" value="${esc(o.code||'')}"><input placeholder="SKU" class="vSku" value="${esc(o.sku||'')}"><button class="danger" onclick="this.parentElement.remove()">×</button><input placeholder="Price KWD" type="number" step="0.001" class="vPrice" value="${o.price??''}"><input placeholder="Stock" type="number" class="vStock" value="${o.stock??''}"></div>`}
+function addVariantRow(){document.getElementById('variantRows').insertAdjacentHTML('beforeend',variantRow())}
+function saveProduct(id){let name=document.getElementById('pName').value.trim();if(!name)return toast('Product name is required.');let options=[...document.querySelectorAll('.variant-line')].map(r=>({name:r.querySelector('.vName').value.trim(),value:r.querySelector('.vValue').value.trim(),code:r.querySelector('.vCode').value.trim(),sku:r.querySelector('.vSku').value.trim(),price:Number(r.querySelector('.vPrice').value||document.getElementById('pPrice').value||0),stock:Number(r.querySelector('.vStock').value||0)})).filter(o=>o.name&&o.value);let product=id?db.products.find(p=>p.id===id):{id:'p'+Date.now(),number:'PC-'+String(db.nextNumber++).padStart(4,'0'),created:Date.now(),rating:0,reviews:0};Object.assign(product,{name,brand:document.getElementById('pBrand').value.trim(),description:document.getElementById('pDesc').value,price:Number(document.getElementById('pPrice').value||0),stock:options.length?options.reduce((s,o)=>s+o.stock,0):Number(document.getElementById('pStock').value||0),categoryId:document.getElementById('pCategory').value,image:document.getElementById('pImage').value.trim(),video:document.getElementById('pVideo').value.trim(),options});let fileInput=document.getElementById('pFile');if(fileInput.files.length){let file=fileInput.files[0],reader=new FileReader();reader.onload=()=>{product.image=reader.result;finishSaveProduct(id,product)};reader.readAsDataURL(file)}else finishSaveProduct(id,product)}
+function finishSaveProduct(id,p){if(!id)db.products.unshift(p);save();closeModal();renderProducts();renderTree();toast('Product saved on this device.')}
+function deleteProduct(id){if(confirm('Delete this product?')){db.products=db.products.filter(p=>p.id!==id);save();adminHome('products');renderProducts()}}
+function writeReview(id){let p=db.products.find(p=>p.id===id);showModal('Review '+p.name,`<label>Your name</label><input id="revName"><label>Rating</label><select id="revRating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><label>Your review</label><textarea id="revText"></textarea><button style="width:100%;margin-top:12px" onclick="submitReview('${id}')">Submit review</button>`)}
+function submitReview(id){let p=db.products.find(p=>p.id===id),r=Number(document.getElementById('revRating').value),name=document.getElementById('revName').value.trim()||'Customer',text=document.getElementById('revText').value.trim();if(!text)return toast('Write a short review first.');db.reviews.unshift({productId:id,productName:p.name,name,rating:r,text});let related=db.reviews.filter(x=>x.productId===id);p.rating=related.reduce((s,x)=>s+x.rating,0)/related.length;p.reviews=related.length;save();closeModal();renderProducts();toast('Review submitted.')}
+function deleteReview(i){db.reviews.splice(i,1);recalcRatings();save();adminHome('reviews');renderProducts()}
+function recalcRatings(){db.products.forEach(p=>{let a=db.reviews.filter(r=>r.productId===p.id);p.reviews=a.length;p.rating=a.length?a.reduce((s,x)=>s+x.rating,0)/a.length:0})}
+function setOrderStatus(id,s){let o=db.orders.find(x=>x.id===id);if(o)o.status=s;save();toast('Order status updated.')}
+function saveFees(){Object.keys(db.fees).forEach(c=>db.fees[c]=Number(document.getElementById('fee_'+c).value||0));save();toast('Delivery estimates saved.')}
+function createDiscount(){let code=document.getElementById('discCode').value.trim().toUpperCase(),percent=Number(document.getElementById('discPercent').value);if(!code||percent<1||percent>90)return toast('Enter a code and 1–90%.');if(db.discounts.some(d=>d.code===code))return toast('That code already exists.');db.discounts.push({code,percent,used:false});save();adminHome('discounts')}
+function showDiscount(code){let d=db.discounts.find(x=>x.code===code);showModal('Discount code',`<h2>${esc(d.code)}</h2><p>${d.percent}% off · ${d.used?'Redeemed':'Available'}</p><div class="notice">QR code preview requires an internet connection. This code is only saved in this browser.</div><button onclick="navigator.clipboard?.writeText('${esc(d.code)}');toast('Code copied')">Copy discount code</button><div id="qrArea" style="margin:15px auto;width:180px"></div>`);if(window.QRCode)new QRCode(document.getElementById('qrArea'),{text:'PIXELCART:'+d.code,width:180,height:180})}
+function renderAll(){renderTree();renderProducts();updateCartCount()}
+renderAll();
+</script>
+
+<script>
+// PIXELCART V9 — Shared customer/owner account with server-verified roles.
 const PC_OWNER_EMAIL='hassan.ahmadalamir@gmail.com';
 const PC_CFG_KEY='pixelcart_supabase_config_v1';
 const PC_SETTINGS_KEY='pixelcart_store_settings_v1';
-let pcSupabase=null, pcOwnerSession=null, pcEditMode=false;
-const pcDefaults={name:'PixelCart',headline:'Find your next favourite.',tagline:'Discover useful things, all in one place.',support:'hassan.ahmadalamir@gmail.com',accent:'#6558e8',heroStart:'#29234f',heroEnd:'#6257d9',currency:'KWD'};
-let pcSettings={...pcDefaults,...(JSON.parse(localStorage.getItem(PC_SETTINGS_KEY)||'{}'))};
-function pcSaveSettings(){localStorage.setItem(PC_SETTINGS_KEY,JSON.stringify(pcSettings));pcApplySettings();toast('Store settings saved on this device.');}
+
+let pcSupabase=null;
+let pcOwnerSession=null;
+let pcCustomerSession=null;
+let pcEditMode=false;
+
+const pcDefaults={
+ name:'PixelCart',
+ headline:'Find your next favourite.',
+ tagline:'Discover useful things, all in one place.',
+ support:'hassan.ahmadalamir@gmail.com',
+ accent:'#6558e8',
+ heroStart:'#29234f',
+ heroEnd:'#6257d9',
+ currency:'KWD'
+};
+
+function pcLoadSettings(){
+ try{return {...pcDefaults,...JSON.parse(localStorage.getItem(PC_SETTINGS_KEY)||'{}')}}
+ catch(e){return {...pcDefaults}}
+}
+let pcSettings=pcLoadSettings();
+
+function pcGetConfig(){
+ try{return JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null')}
+ catch(e){return null}
+}
+
+function pcInitSupabase(){
+ const c=pcGetConfig();
+ if(!c||!c.url||!c.key)throw new Error('Supabase is not configured on this device.');
+ if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');
+ if(!pcSupabase)pcSupabase=window.supabase.createClient(c.url,c.key);
+ return pcSupabase;
+}
+
 function pcApplySettings(){
- const brand=document.querySelector('.brand'); if(brand)brand.textContent=pcSettings.name||'PixelCart';
- const hero=document.querySelector('.hero'); if(hero){hero.style.background=`linear-gradient(120deg,${pcSettings.heroStart},${pcSettings.heroEnd})`;const h=hero.querySelector('h1'),p=hero.querySelector('p');if(h)h.textContent=pcSettings.headline;if(p)p.textContent=pcSettings.tagline;}
- const footer=document.querySelector('.footer');if(footer)footer.innerHTML=`${esc(pcSettings.name)} · Prices shown in ${esc(pcSettings.currency)} · Cash on Delivery demo · Support: <a href="mailto:${esc(pcSettings.support)}">${esc(pcSettings.support)}</a>`;
+ const brand=document.querySelector('.brand');
+ if(brand)brand.textContent=pcSettings.name||'PixelCart';
+
+ const hero=document.querySelector('.hero');
+ if(hero){
+  hero.style.background=`linear-gradient(120deg,${pcSettings.heroStart},${pcSettings.heroEnd})`;
+  const h=hero.querySelector('h1'),p=hero.querySelector('p');
+  if(h)h.textContent=pcSettings.headline;
+  if(p)p.textContent=pcSettings.tagline;
+ }
+
+ const footer=document.querySelector('.footer');
+ if(footer)footer.innerHTML=
+  `${esc(pcSettings.name)} · Prices shown in ${esc(pcSettings.currency)} · Cash on Delivery demo · Support: <a href="mailto:${esc(pcSettings.support)}">${esc(pcSettings.support)}</a>`;
+
  document.documentElement.style.setProperty('--accent',pcSettings.accent||pcDefaults.accent);
- const title=(pcSettings.name||'PixelCart')+' — Store';document.title=title;
+ document.title=(pcSettings.name||'PixelCart')+' — Store';
 }
-function pcGetConfig(){try{return JSON.parse(localStorage.getItem(PC_CFG_KEY)||'null')}catch(e){return null}}
-function pcInitSupabase(){const c=pcGetConfig();if(!c||!c.url||!c.key)return null;if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');if(!pcSupabase)pcSupabase=window.supabase.createClient(c.url,c.key);return pcSupabase}
-function pcSetupForm(){return `<div class="notice">Connect your own Supabase project to enable secure email login. The Project URL and publishable/anon key are safe for a browser app; <b>never paste a service_role or secret key here.</b></div><label>Supabase Project URL</label><input id="pcSbUrl" placeholder="https://your-project.supabase.co" value="${esc(pcGetConfig()?.url||'')}"><label>Supabase publishable / anon key</label><textarea id="pcSbKey" rows="3" placeholder="Paste your project's publishable/anon key">${esc(pcGetConfig()?.key||'')}</textarea><button style="width:100%;margin-top:10px" onclick="pcSaveConfig()">Save Supabase connection</button><p class="meta">Find these in Supabase: Project Settings → API. Your owner account email is fixed to ${PC_OWNER_EMAIL}.</p>`}
-function pcSaveConfig(){const url=document.getElementById('pcSbUrl').value.trim(),key=document.getElementById('pcSbKey').value.trim();if(!/^https:\/\//.test(url)||!key)return toast('Enter a valid Supabase URL and publishable/anon key.');localStorage.setItem(PC_CFG_KEY,JSON.stringify({url,key}));pcSupabase=null;try{pcInitSupabase();toast('Supabase connection details saved.');openAdmin()}catch(e){toast(e.message)}}
-function openAdmin(){
- let c=pcGetConfig();
- if(pcOwnerSession){adminHome();return;}
- showModal('PixelCart owner login',`<p class="muted">Sign in with the owner email address to manage your store.</p><label>Owner email</label><input id="pcLoginEmail" type="email" value="${PC_OWNER_EMAIL}" readonly><label>Password</label><input id="pcLoginPassword" type="password" placeholder="Your Supabase account password"><button style="width:100%;margin-top:12px" onclick="pcLogin()">Sign in</button><button class="secondary" style="width:100%;margin-top:8px" onclick="pcCreateOwner()">Create owner account</button><div class="pc-config"><b>Supabase connection</b><p class="meta">${c?'Connection details saved.':'Not connected yet.'}</p><button class="ghost" onclick="showModal('Connect Supabase',pcSetupForm())">${c?'Change connection':'Set up Supabase'}</button></div><p class="meta">Only ${PC_OWNER_EMAIL} is permitted as the owner email. If you have not created the owner user in Supabase yet, use Create owner account.</p>`);
+
+function pcSaveSettings(){
+ localStorage.setItem(PC_SETTINGS_KEY,JSON.stringify(pcSettings));
+ pcApplySettings();
+ toast('Store settings saved on this device.');
 }
-async function pcLogin(){const email=(document.getElementById('pcLoginEmail')?.value||'').trim().toLowerCase(),password=document.getElementById('pcLoginPassword')?.value||'';if(email!==PC_OWNER_EMAIL)return toast('This email is not authorised as the owner.');if(!password)return toast('Enter your password.');try{const sb=pcInitSupabase();if(!sb)return toast('Connect Supabase first.');const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;if(data.user?.email?.toLowerCase()!==PC_OWNER_EMAIL){await sb.auth.signOut();throw new Error('This account is not the authorised owner.');}pcOwnerSession=data.session;toast('Owner login successful.');adminHome();}catch(e){toast(e.message||'Could not sign in.')}}
-async function pcCreateOwner(){const email=PC_OWNER_EMAIL,password=document.getElementById('pcLoginPassword')?.value||'';if(password.length<8)return toast('Choose a password with at least 8 characters.');try{const sb=pcInitSupabase();if(!sb)return toast('Connect Supabase first.');const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href}});if(error)throw error;if(data.session){pcOwnerSession=data.session;adminHome();}else showModal('Check your email',`Supabase sent a confirmation message to <b>${PC_OWNER_EMAIL}</b>. Verify the address, then return here and sign in.`);}catch(e){toast(e.message||'Could not create owner account.')}}
-async function pcLogout(){try{if(pcSupabase)await pcSupabase.auth.signOut()}catch(e){}pcOwnerSession=null;pcEditMode=false;showModal('Signed out','<p>You have signed out of the PixelCart owner account.</p><button onclick="closeModal()">Close</button>');}
-function pcRequireOwner(){if(!pcOwnerSession){openAdmin();return false}return true}
+
+// The same Account page is used by customers and the owner.
+function openAccount(){
+ if(pcOwnerSession){adminHome();return}
+ if(pcCustomerSession){pcCustomerHome();return}
+ pcShowAccount('login');
+}
+
+function pcShowAccount(mode='login',message=''){
+ const isSignup=mode==='signup';
+ showModal(isSignup?'Create your account':'Sign in to PixelCart',
+ `<p class="muted">${isSignup?'Create a customer account to use PixelCart.':'Sign in to your PixelCart account.'}</p>
+ ${message?`<div class="notice">${esc(message)}</div>`:''}
+ <label>Email address</label>
+ <input id="pcEmail" type="email" autocomplete="email" placeholder="you@example.com">
+ <label>Password</label>
+ <input id="pcPassword" type="password" autocomplete="${isSignup?'new-password':'current-password'}" placeholder="${isSignup?'At least 8 characters':'Your password'}">
+ ${isSignup?`<button style="width:100%;margin-top:12px" onclick="pcSignUp()">Create customer account</button>
+ <p class="meta">By creating an account, you will receive customer access only. Owner access is assigned separately and cannot be selected here.</p>
+ <button class="ghost" style="width:100%" onclick="pcShowAccount('login')">Already have an account? Sign in</button>`:
+ `<button style="width:100%;margin-top:12px" onclick="pcLogin()">Sign in</button>
+ <button class="ghost" style="width:100%;margin-top:8px" onclick="pcShowAccount('signup')">Create a customer account</button>`}`);
+}
+
+async function pcGetRole(user){
+ const sb=pcInitSupabase();
+ const {data,error}=await sb
+  .from('user_roles')
+  .select('role')
+  .eq('user_id',user.id)
+  .maybeSingle();
+
+ if(error)throw new Error('Could not verify your account role. Check the Supabase user_roles table and its security policy.');
+ return data?.role||null;
+}
+
+async function pcLogin(){
+ const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
+ const password=document.getElementById('pcPassword')?.value||'';
+
+ if(!email||!password)return toast('Enter your email and password.');
+
+ try{
+  const sb=pcInitSupabase();
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  await pcRouteSession(data.session);
+ }catch(e){
+  toast(e.message||'Could not sign in.');
+ }
+}
+
+async function pcSignUp(){
+ const email=(document.getElementById('pcEmail')?.value||'').trim().toLowerCase();
+ const password=document.getElementById('pcPassword')?.value||'';
+
+ if(!email||!password)return toast('Enter your email and password.');
+ if(password.length<8)return toast('Use a password with at least 8 characters.');
+
+ // The owner account must already exist. Public registration cannot assign owner access.
+ if(email===PC_OWNER_EMAIL){
+  return toast('That address is reserved for the existing owner account. Please sign in instead.');
+ }
+
+ try{
+  const sb=pcInitSupabase();
+  const {data,error}=await sb.auth.signUp({
+   email,
+   password
+  });
+  if(error)throw error;
+
+  if(data.session){
+   await pcRouteSession(data.session);
+  }else{
+   showModal('Check your email',
+    `<p>Supabase sent a confirmation email to <b>${esc(email)}</b>.</p>
+     <p class="muted">Confirm your email, then return to PixelCart and sign in.</p>
+     <button style="width:100%" onclick="pcShowAccount('login')">Back to sign in</button>`);
+  }
+ }catch(e){
+  toast(e.message||'Could not create your account.');
+ }
+}
+
+async function pcRouteSession(session){
+ if(!session?.user){
+  pcOwnerSession=null;
+  pcCustomerSession=null;
+  openAccount();
+  return;
+ }
+
+ const user=session.user;
+ let role=null;
+
+ try{
+  role=await pcGetRole(user);
+ }catch(e){
+  try{await pcInitSupabase().auth.signOut()}catch(ignore){}
+  pcOwnerSession=null;
+  pcCustomerSession=null;
+  showModal('Account verification unavailable',
+   `<p>${esc(e.message)}</p><p class="muted">Please check the Supabase role table and try again.</p>`);
+  return;
+ }
+
+ if(role==='owner'&&user.email?.toLowerCase()===PC_OWNER_EMAIL){
+  pcOwnerSession=session;
+  pcCustomerSession=null;
+  toast('Owner signed in.');
+  adminHome();
+  return;
+ }
+
+ if(role==='customer'){
+  pcCustomerSession=session;
+  pcOwnerSession=null;
+  pcCustomerHome();
+  return;
+ }
+
+ // No role or an unexpected role means no dashboard access.
+ try{await pcInitSupabase().auth.signOut()}catch(ignore){}
+ pcOwnerSession=null;
+ pcCustomerSession=null;
+ showModal('Account access not assigned',
+  `<p>This account does not have a recognised PixelCart role.</p>
+   <p class="muted">If this is your owner account, the owner role needs to be assigned in Supabase. Customer accounts should receive their role automatically after signup.</p>`);
+}
+
+function pcCustomerHome(){
+ if(!pcCustomerSession)return openAccount();
+ const email=pcCustomerSession.user.email||'Customer';
+ showModal('Your PixelCart account',
+  `<p>Welcome to PixelCart.</p>
+   <p class="muted">Signed in as <b>${esc(email)}</b></p>
+   <div class="notice">You are signed in with customer access. This account cannot open the owner dashboard.</div>
+   <button class="ghost" style="width:100%" onclick="pcLogout()">Sign out</button>`);
+}
+
+async function pcLogout(){
+ try{
+  const sb=pcInitSupabase();
+  await sb.auth.signOut();
+ }catch(e){}
+ pcOwnerSession=null;
+ pcCustomerSession=null;
+ pcEditMode=false;
+ showModal('Signed out',
+  `<p>You have signed out of PixelCart.</p>
+   <button style="width:100%" onclick="closeModal()">Close</button>`);
+}
+
+// Only a Supabase session whose user_roles row says owner can use this.
+function pcRequireOwner(){
+ if(!pcOwnerSession){
+  openAccount();
+  return false;
+ }
+ return true;
+}
+
+// Supabase connection settings are available only inside the owner dashboard.
+function pcConnectionForm(){
+ const c=pcGetConfig();
+ return `<h3>Supabase connection</h3>
+ <p class="muted">These settings are shown only in the owner dashboard. Use your Supabase Project URL and publishable/anon key. Never enter a service_role key or secret key.</p>
+ <label>Supabase Project URL</label>
+ <input id="pcSbUrl" placeholder="https://your-project.supabase.co" value="${esc(c?.url||'')}">
+ <label>Supabase publishable / anon key</label>
+ <textarea id="pcSbKey" rows="3" placeholder="Paste your publishable / anon key">${esc(c?.key||'')}</textarea>
+ <button style="width:100%;margin-top:10px" onclick="pcSaveConfig()">Save Supabase connection</button>
+ <p class="meta">Use the base project URL ending in .supabase.co. Do not add /rest/v1.</p>`;
+}
+
+function pcSaveConfig(){
+ if(!pcRequireOwner())return;
+
+ const url=(document.getElementById('pcSbUrl')?.value||'').trim().replace(/\/+$/,'');
+ const key=(document.getElementById('pcSbKey')?.value||'').trim();
+
+ if(!/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/.test(url)||!key){
+  return toast('Enter the base Supabase project URL and publishable/anon key.');
+ }
+
+ localStorage.setItem(PC_CFG_KEY,JSON.stringify({url,key}));
+ pcSupabase=null;
+
+ try{
+  pcInitSupabase();
+  toast('Supabase connection saved on this device.');
+  adminHome('connection');
+ }catch(e){
+  toast(e.message||'Could not connect to Supabase.');
+ }
+}
+
+// Owner dashboard. Every route checks the verified owner session first.
 function adminHome(tab='products'){
  if(!pcRequireOwner())return;
- const tabs=['products','categories','orders','reviews','delivery','discounts','store'];
- showModal('PixelCart owner dashboard',`<div class="pc-owner-status">Signed in as ${PC_OWNER_EMAIL}</div><div class="tabs">${tabs.map(t=>`<button class="${t===tab?'active':''}" onclick="adminHome('${t}')">${t==='store'?'Store design':t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div><div class="pc-owner-tools"><button class="secondary" onclick="pcToggleEditMode()">${pcEditMode?'Turn off':'Turn on'} website Edit Mode</button><button class="ghost" onclick="pcLogout()">Sign out</button></div><div id="adminContent">${tab==='store'?pcStoreSettingsForm():adminContent(tab)}</div>`);
+
+ const tabs=['products','categories','orders','reviews','delivery','discounts','store','connection'];
+
+ showModal('PixelCart owner dashboard',
+ `<div class="pc-owner-status">Verified owner account</div>
+  <div class="tabs">${tabs.map(t=>
+   `<button class="${t===tab?'active':''}" onclick="adminHome('${t}')">${t==='store'?'Store design':t==='connection'?'Connection':t[0].toUpperCase()+t.slice(1)}</button>`
+  ).join('')}</div>
+  <div class="pc-owner-tools">
+   <button class="secondary" onclick="pcToggleEditMode()">${pcEditMode?'Turn off':'Turn on'} website Edit Mode</button>
+   <button class="ghost" onclick="pcLogout()">Sign out</button>
+  </div>
+  <div id="adminContent">${tab==='store'?pcStoreSettingsForm():tab==='connection'?pcConnectionForm():adminContent(tab)}</div>`);
 }
-function pcStoreSettingsForm(){return `<p class="muted">Change the store identity and main storefront appearance here. These settings currently save in this browser; cloud syncing will be connected when we build the Supabase database.</p><div class="form-grid"><div><label>Store name</label><input id="pcName" value="${esc(pcSettings.name)}"></div><div><label>Support email</label><input id="pcSupport" type="email" value="${esc(pcSettings.support)}"></div><div class="wide"><label>Homepage headline</label><input id="pcHeadline" value="${esc(pcSettings.headline)}"></div><div class="wide"><label>Homepage description</label><textarea id="pcTagline" rows="2">${esc(pcSettings.tagline)}</textarea></div><div><label>Accent colour</label><input id="pcAccent" type="color" value="${esc(pcSettings.accent)}"></div><div><label>Hero background — first colour</label><input id="pcHeroStart" type="color" value="${esc(pcSettings.heroStart)}"></div><div><label>Hero background — second colour</label><input id="pcHeroEnd" type="color" value="${esc(pcSettings.heroEnd)}"></div><div><label>Currency label</label><select id="pcCurrency"><option ${pcSettings.currency==='KWD'?'selected':''}>KWD</option><option ${pcSettings.currency==='SAR'?'selected':''}>SAR</option><option ${pcSettings.currency==='AED'?'selected':''}>AED</option><option ${pcSettings.currency==='QAR'?'selected':''}>QAR</option><option ${pcSettings.currency==='BHD'?'selected':''}>BHD</option><option ${pcSettings.currency==='OMR'?'selected':''}>OMR</option></select></div><div class="wide"><button style="width:100%" onclick="pcSaveStoreForm()">Save store changes</button></div></div><div class="notice">Edit Mode lets you add quick edit buttons to product cards while you are signed in. Storewide layout editing and cloud sync are later build steps.</div>`}
-function pcSaveStoreForm(){pcSettings={name:document.getElementById('pcName').value.trim()||'PixelCart',support:document.getElementById('pcSupport').value.trim()||PC_OWNER_EMAIL,headline:document.getElementById('pcHeadline').value.trim(),tagline:document.getElementById('pcTagline').value,accent:document.getElementById('pcAccent').value,heroStart:document.getElementById('pcHeroStart').value,heroEnd:document.getElementById('pcHeroEnd').value,currency:document.getElementById('pcCurrency').value};pcSaveSettings();adminHome('store')}
-function pcToggleEditMode(){if(!pcRequireOwner())return;pcEditMode=!pcEditMode;adminHome('products');pcAddInlineEditButtons();toast(pcEditMode?'Website Edit Mode is on.':'Website Edit Mode is off.')}
-function pcAddInlineEditButtons(){if(!pcOwnerSession||!pcEditMode)return;document.querySelectorAll('.product').forEach(card=>{if(card.querySelector('.pc-inline-edit'))return;const details=card.querySelector('.product-actions button[onclick*="viewProduct"]');if(!details)return;const m=details.getAttribute('onclick').match(/viewProduct\('([^']+)'\)/);if(!m)return;const b=document.createElement('button');b.className='pc-edit-chip pc-inline-edit';b.textContent='Edit product';b.onclick=()=>productForm(m[1]);card.querySelector('.product-actions')?.appendChild(b);});}
+
+function pcStoreSettingsForm(){
+ return `<p class="muted">Change the store identity and main storefront appearance here. These settings currently save in this browser.</p>
+ <div class="form-grid">
+ <div><label>Store name</label><input id="pcName" value="${esc(pcSettings.name)}"></div>
+ <div><label>Support email</label><input id="pcSupport" type="email" value="${esc(pcSettings.support)}"></div>
+ <div class="wide"><label>Homepage headline</label><input id="pcHeadline" value="${esc(pcSettings.headline)}"></div>
+ <div class="wide"><label>Homepage description</label><textarea id="pcTagline" rows="2">${esc(pcSettings.tagline)}</textarea></div>
+ <div><label>Accent colour</label><input id="pcAccent" type="color" value="${esc(pcSettings.accent)}"></div>
+ <div><label>Hero background — first colour</label><input id="pcHeroStart" type="color" value="${esc(pcSettings.heroStart)}"></div>
+ <div><label>Hero background — second colour</label><input id="pcHeroEnd" type="color" value="${esc(pcSettings.heroEnd)}"></div>
+ <div><label>Currency label</label><select id="pcCurrency">
+ <option ${pcSettings.currency==='KWD'?'selected':''}>KWD</option>
+ <option ${pcSettings.currency==='SAR'?'selected':''}>SAR</option>
+ <option ${pcSettings.currency==='AED'?'selected':''}>AED</option>
+ <option ${pcSettings.currency==='QAR'?'selected':''}>QAR</option>
+ <option ${pcSettings.currency==='BHD'?'selected':''}>BHD</option>
+ <option ${pcSettings.currency==='OMR'?'selected':''}>OMR</option>
+ </select></div>
+ <div class="wide"><button style="width:100%" onclick="pcSaveStoreForm()">Save store changes</button></div>
+ </div>
+ <div class="notice">Your current product catalogue, orders, reviews, categories, delivery estimates and discounts are still stored in this browser. Connecting Supabase login does not automatically move that data to the cloud.</div>`;
+}
+
+function pcSaveStoreForm(){
+ pcSettings={
+  name:document.getElementById('pcName').value.trim()||'PixelCart',
+  support:document.getElementById('pcSupport').value.trim()||PC_OWNER_EMAIL,
+  headline:document.getElementById('pcHeadline').value.trim(),
+  tagline:document.getElementById('pcTagline').value,
+  accent:document.getElementById('pcAccent').value,
+  heroStart:document.getElementById('pcHeroStart').value,
+  heroEnd:document.getElementById('pcHeroEnd').value,
+  currency:document.getElementById('pcCurrency').value
+ };
+ pcSaveSettings();
+ adminHome('store');
+}
+
+function pcToggleEditMode(){
+ if(!pcRequireOwner())return;
+ pcEditMode=!pcEditMode;
+ adminHome('products');
+ pcAddInlineEditButtons();
+ toast(pcEditMode?'Website Edit Mode is on.':'Website Edit Mode is off.');
+}
+
+function pcAddInlineEditButtons(){
+ if(!pcOwnerSession||!pcEditMode)return;
+
+ document.querySelectorAll('.product').forEach(card=>{
+  if(card.querySelector('.pc-inline-edit'))return;
+  const details=card.querySelector('.product-actions button[onclick*="viewProduct"]');
+  if(!details)return;
+  const m=details.getAttribute('onclick').match(/viewProduct\('([^']+)'\)/);
+  if(!m)return;
+
+  const b=document.createElement('button');
+  b.className='pc-edit-chip pc-inline-edit';
+  b.textContent='Edit product';
+  b.onclick=()=>productForm(m[1]);
+  card.querySelector('.product-actions')?.appendChild(b);
+ });
+}
+
 const pcOriginalRenderProducts=renderProducts;
-renderProducts=function(){pcOriginalRenderProducts();pcAddInlineEditButtons();};
-// Reapply custom storefront identity after initial page render.
+renderProducts=function(){
+ pcOriginalRenderProducts();
+ pcAddInlineEditButtons();
+};
+
+// Apply saved store appearance.
 pcApplySettings();
-// Restore an existing Supabase session if the project was configured on this device.
-(async()=>{try{const sb=pcInitSupabase();if(sb){const {data}=await sb.auth.getSession();if(data.session?.user?.email?.toLowerCase()===PC_OWNER_EMAIL)pcOwnerSession=data.session;else if(data.session)await sb.auth.signOut();}}catch(e){console.warn('Supabase session restore:',e.message)}})();
+
+// Restore an existing session and verify its role with Supabase.
+// A matching email alone is never enough to grant owner access.
+(async()=>{
+ try{
+  const sb=pcInitSupabase();
+  const {data,error}=await sb.auth.getSession();
+  if(error)throw error;
+  if(data.session)await pcRouteSession(data.session);
+ }catch(e){
+  console.warn('PixelCart session restore:',e.message);
+ }
+})();
 </script>
-</body></html>
+</body>
+</html>
