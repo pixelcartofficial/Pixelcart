@@ -516,17 +516,23 @@ window.pcRouteSession=async function(session){
 window.pcCustomerHome=async function(){
  if(!pcCustomerSession)return openAccount();
  const sb=pcInitSupabase();
- const {data,error}=await sb.from('pixelcart_customer_discounts')
-  .select('saved_at,pixelcart_discounts(id,code,percent,expires_at,active)')
-  .order('saved_at',{ascending:false});
- const rows=error?[]:(data||[]);
+ const [discountResult,orderResult]=await Promise.all([
+  sb.from('pixelcart_customer_discounts')
+   .select('saved_at,pixelcart_discounts(id,code,percent,expires_at,active)')
+   .order('saved_at',{ascending:false}),
+  sb.from('pixelcart_orders').select('id,data').order('created_at',{ascending:false})
+ ]);
+ const rows=discountResult.error?[]:(discountResult.data||[]);
  const list=rows.filter(x=>x.pixelcart_discounts).map(x=>{
   const d=x.pixelcart_discounts;
   return '<div class="admin-item"><div><b>'+esc(d.code)+'</b><small>'+Number(d.percent)+'% off · '+(d.expires_at?'Expires '+esc(new Date(d.expires_at).toLocaleDateString()):'No expiry set')+'</small></div><span class="pill">'+(d.active?'Saved':'Inactive')+'</span></div>';
  }).join('');
+ const orders=orderResult.error?[]:(orderResult.data||[]).map(x=>x.data);
+ const orderList=orders.map(o=>'<div class="admin-item"><div><b>'+esc(o.id||'Order')+' · '+esc(o.status||'New')+'</b><small>'+esc(o.date||'')+' · '+esc(o.country||'')+'</small></div><b>'+money(o.total||0)+'</b></div>').join('');
  showModal('Your PixelCart account',
   '<p>Welcome, '+esc(pcCustomerSession.user.user_metadata?.full_name||'Customer')+'.</p><p class="muted">Signed in as <b>'+esc(pcCustomerSession.user.email||'Customer')+'</b></p>'+
-  '<h3>My Discounts</h3>'+(error?'<div class="notice">Could not load saved discounts. '+esc(error.message)+'</div>':list||'<div class="empty">No saved discounts yet. Scan a PixelCart discount QR code while signed in.</div>')+
+  '<h3>My Orders</h3>'+(orderResult.error?'<div class="notice">Could not load your orders. '+esc(orderResult.error.message)+'</div>':orderList||'<div class="empty">You have not placed any orders yet.</div>')+
+  '<h3 style="margin-top:18px">My Discounts</h3>'+(discountResult.error?'<div class="notice">Could not load saved discounts. '+esc(discountResult.error.message)+'</div>':list||'<div class="empty">No saved discounts yet. Scan a PixelCart discount QR code while signed in.</div>')+
   '<button class="ghost" style="width:100%;margin-top:14px" onclick="pcLogout()">Sign out</button>');
 };
 
@@ -603,6 +609,7 @@ async function pcCloudLoad(){
   db.products=(p.data||[]).map(x=>x.data);
   db.fees=Object.fromEntries((fv.data||[]).map(x=>[x.country,Number(x.fee)]));
   db.reviews=(r.data||[]).map(x=>({...x.data,id:x.id}));
+  recalcRatings();
   if(st.data?.data){pcSettings={...pcSettings,...st.data.data};pcApplySettings()}
   pcCloudReady=true;
   localStorage.setItem('pixelcart_cloud_ready','1');
